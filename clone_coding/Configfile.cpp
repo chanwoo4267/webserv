@@ -1,4 +1,4 @@
-#include "ConfigFile.hpp"
+#include "Configfile.hpp"
 
 ConfigFile::ConfigFile() : _size(0) { }
 
@@ -12,12 +12,12 @@ int ConfigFile::getTypePath(std::string const path)
 	struct stat	buffer;
 	int			result;
 	
-	result = stat(path.c_str(), &buffer);
+	result = stat(path.c_str(), &buffer); // stat : 파일의 정보를 조회, 성공시 0을 반환. 실패시 -1 반환
 	if (result == 0)
 	{
-		if (buffer.st_mode & S_IFREG)
+		if (buffer.st_mode & S_IFREG) // S_IFREG : regular file
 			return (1);
-		else if (buffer.st_mode & S_IFDIR)
+		else if (buffer.st_mode & S_IFDIR) // S_IFDIR : directory
 			return (2);
 		else
 			return (3);
@@ -26,17 +26,19 @@ int ConfigFile::getTypePath(std::string const path)
 		return (-1);
 }
 
-/* 파일을 열 수 있는지 확인 후 열수 있으면 0, 아니면  -1 반환 */
+/* 파일을 access할 수 있는지 확인 후 있으면 0, 아니면 -1 반환 */
 int	ConfigFile::checkFile(std::string const path, int mode)
 {
 	return (access(path.c_str(), mode));
+	/* mode에 4(R_OK)는 읽기, 2(W_OK)는 쓰기, 1(X_OK)은 실행, 0은 존재여부만 검사한다. */
 }
 
+/* 파일을 read 할 수 있는지 확인 후 있으면 0, 아니면 -1 반환 */
 int ConfigFile::isFileExistAndReadable(std::string const path, std::string const index)
 {
-	if (getTypePath(index) == 1 && checkFile(index, 4) == 0)
+	if (getTypePath(index) == 1 && checkFile(index, R_OK) == 0) // regular file이고, 읽을 수 있음
 		return (0);
-	if (getTypePath(path + index) == 1 && checkFile(path + index, 4) == 0)
+	if (getTypePath(path + index) == 1 && checkFile(path + index, R_OK) == 0)
 		return (0);
 	return (-1);
 }
