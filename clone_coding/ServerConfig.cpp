@@ -615,7 +615,7 @@ void ServerConfig::checkToken(std::string &parametr)
 	parametr.erase(pos);
 }
 
-/* check location for a dublicate */
+/* 각 location을 순회하며 중복된 path를 가진게 있는지 확인 */
 bool ServerConfig::checkLocaitons() const
 {
 	if (this->_locations.size() < 2)
