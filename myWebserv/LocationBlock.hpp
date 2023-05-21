@@ -1,33 +1,35 @@
-#ifndef LOCATION_HPP
-#define LOCATION_HPP
+#ifndef LOCATIONBLOCK_HPP
+#define LOCATIONBLOCK_HPP
 
 #include "Webserv.hpp"
 
 /* config 파일 Location 블럭에 들어올 수 있는 정보는 아래와 같다. */
 /* path, root, autoindex, index, allow_methods, return, alias, cgi관련, client_max_body_size */
+/* 생성자에서 모든 private variable을 default value로 초기화한다. */
 
-class Location
+class LocationBlock
 {
 	private:
 		std::string					_path;
 		std::string					_root;
 		bool						_autoindex;
 		std::string					_index;
-		std::vector<short>			_methods; // GET+ POST- DELETE- PUT- HEAD-, 허용된 methods는 1, 아닐경우 0
+		std::map<std::string, bool>	_methods; // 허용된 methods는 true, 아닐경우 false
 		std::string					_return;
 		std::string					_alias;
 		std::vector<std::string>	_cgi_path;
 		std::vector<std::string>	_cgi_ext;
-		unsigned long				_client_max_body_size;
+		long						_client_max_body_size;
 
 	public:
 		std::map<std::string, std::string> _ext_path;
 
-		Location();
-		Location(const Location &other);
-		Location &operator=(const Location &rhs);
-		~Location();
+		LocationBlock();
+		LocationBlock(const LocationBlock &obj);
+		LocationBlock &operator=(const LocationBlock &obj);
+		~LocationBlock();
 
+		/* set Methods */
 		void setPath(std::string parametr);
 		void setRootLocation(std::string parametr);
 		void setMethods(std::vector<std::string> methods);
@@ -38,11 +40,12 @@ class Location
 		void setCgiPath(std::vector<std::string> path);
 		void setCgiExtension(std::vector<std::string> extension);
 		void setMaxBodySize(std::string parametr);
-		void setMaxBodySize(unsigned long parametr);
+		void setMaxBodySize(long parametr);
 
+		/* get Methods */
 		const std::string &getPath() const;
 		const std::string &getRootLocation() const;
-		const std::vector<short> &getMethods() const;
+		const std::map<std::string, bool> &getMethods() const;
 		const bool &getAutoindex() const;
 		const std::string &getIndexLocation() const;
 		const std::string &getReturn() const;
@@ -50,10 +53,10 @@ class Location
 		const std::vector<std::string> &getCgiPath() const;
 		const std::vector<std::string> &getCgiExtension() const;
 		const std::map<std::string, std::string> &getExtensionPath() const;
-		const unsigned long &getMaxBodySize() const;
+		const long &getMaxBodySize() const;
 
-		std::string getPrintMethods() const; // for checking only
-
+		/* test function */
+		const void printLocationBlock();
 };
 
 #endif

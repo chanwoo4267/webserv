@@ -10,6 +10,7 @@
 # include <unistd.h>
 # include <dirent.h>
 # include <sstream>
+# include <limits>
 // # include <bits/stdc++.h>
 # include <cstdlib>
 # include <fstream>
@@ -41,14 +42,12 @@
 # include <sys/select.h>
 # include <arpa/inet.h>
 
-# include "ConfigParser.hpp"
-# include "ConfigFile.hpp"
-# include "ServerConfig.hpp"
-# include "Location.hpp"
-# include "HttpRequest.hpp"
-# include "CgiHandler.hpp"
-# include "Mime.hpp"
-# include "Logger.hpp"
+/* my files */
+# include "LocationBlock.hpp"
+# include "Utility.hpp"
+# include "ErrorHandler.hpp"
+# include "ServerBlock.hpp"
+# include "Config.hpp"
 
 #define CONNECTION_TIMEOUT 60 // 아무 데이터 전송이 없으면 클라이언트가 서버로부터 추방되는데 걸리는 시간 (초 단위)
 
@@ -72,5 +71,12 @@ std::string toString(const T val)
     stream << val;
     return stream.str();
 }
+
+// PRINT용 색 정의
+#define NC "\e[0m" // No Color
+#define RED "\e[0;31m"
+#define GRN "\e[0;32m"
+#define CYN "\e[0;36m"
+#define REDB "\e[41m" // Red Background
 
 #endif

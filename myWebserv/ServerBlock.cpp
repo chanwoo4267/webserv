@@ -1,61 +1,60 @@
-#include "ServerConfig.hpp"
+#include "ServerBlock.hpp"
 
-ServerConfig::ServerConfig()
+ServerBlock::ServerBlock()
 {
 	this->_port = 0;
 	this->_host = 0;
 	this->_server_name = "";
 	this->_root = "";
-	this->_client_max_body_size = MAX_CONTENT_LENGTH;
+	this->_client_max_body_size = 1000000;
 	this->_index = "";
 	this->_listen_fd = 0;
 	this->_autoindex = false;
 	this->initErrorPages();
 }
 
-ServerConfig::~ServerConfig() { }
+ServerBlock::~ServerBlock() { }
 
-ServerConfig::ServerConfig(const ServerConfig &other)
+ServerBlock::ServerBlock(const ServerBlock &obj)
 {
-	if (this != &other)
+	if (this != &obj)
 	{
-		this->_server_name = other._server_name;
-		this->_root = other._root;
-		this->_host = other._host;
-		this->_port = other._port;
-		this->_client_max_body_size = other._client_max_body_size;
-		this->_index = other._index;
-		this->_error_pages = other._error_pages;
-		this->_locations = other._locations;
-		this->_listen_fd = other._listen_fd;
-		this->_autoindex = other._autoindex;
-		this->_server_address = other._server_address;
-
+		this->_server_name = obj._server_name;
+		this->_root = obj._root;
+		this->_host = obj._host;
+		this->_port = obj._port;
+		this->_client_max_body_size = obj._client_max_body_size;
+		this->_index = obj._index;
+		this->_error_pages = obj._error_pages;
+		this->_locations = obj._locations;
+		this->_listen_fd = obj._listen_fd;
+		this->_autoindex = obj._autoindex;
+		this->_server_address = obj._server_address;
 	}
 	return ;
 }
 
-ServerConfig &ServerConfig::operator=(const ServerConfig & rhs)
+ServerBlock &ServerBlock::operator=(const ServerBlock & obj)
 {
-	if (this != &rhs)
+	if (this != &obj)
 	{
-		this->_server_name = rhs._server_name;
-		this->_root = rhs._root;
-		this->_port = rhs._port;
-		this->_host = rhs._host;
-		this->_client_max_body_size = rhs._client_max_body_size;
-		this->_index = rhs._index;
-		this->_error_pages = rhs._error_pages;
-		this->_locations = rhs._locations;
-		this->_listen_fd = rhs._listen_fd;
-		this->_autoindex = rhs._autoindex;
-		this->_server_address = rhs._server_address;
+		this->_server_name = obj._server_name;
+		this->_root = obj._root;
+		this->_port = obj._port;
+		this->_host = obj._host;
+		this->_client_max_body_size = obj._client_max_body_size;
+		this->_index = obj._index;
+		this->_error_pages = obj._error_pages;
+		this->_locations = obj._locations;
+		this->_listen_fd = obj._listen_fd;
+		this->_autoindex = obj._autoindex;
+		this->_server_address = obj._server_address;
 	}
 	return (*this);
 }
 
 /* 모든 에러 페이지에 대해 map 요소 추가 및 초기화 */
-void ServerConfig::initErrorPages(void)
+void ServerBlock::initErrorPages(void)
 {
     int i;
     for(i = 300; i <= 308; i++)
@@ -83,30 +82,32 @@ void ServerConfig::initErrorPages(void)
 /* ------------------------------- set methods ------------------------------- */
 /* --------------------------------------------------------------------------- */
 
-void ServerConfig::setServerName(std::string server_name)
+/* check */ //ServerBlock의 set함수들에서 세미콜론을 제거하지 말고, 세미콜론을 미리 제거한 뒤 set함수를 호출하도록 변경
+
+void ServerBlock::setServerName(std::string server_name)
 {
 	checkToken(server_name); // 끝에 세미콜론이 있는지 확인 후 없으면 예외 throw, 있으면 제거해줌
 	this->_server_name = server_name;
 }
 
-void ServerConfig::setIndex(std::string index)
+void ServerBlock::setIndex(std::string index)
 {
 	checkToken(index);
 	this->_index = index;
 }
 
-void	ServerConfig::setFd(int fd)
+void	ServerBlock::setFd(int fd)
 {
 	this->_listen_fd = fd;
 }
 
-void ServerConfig::setHost(std::string parametr)
+void ServerBlock::setHost(std::string parametr)
 {
 	checkToken(parametr);
 	if (parametr == "localhost") // localhost는 자동으로 127.0.0.1로 변환 후 저장
 		parametr = "127.0.0.1";
 	if (!isValidHost(parametr)) // host가 valid한지 확인, valid하지 않다면 예외를 throw
-		throw ErrorException("Wrong syntax: host");
+		throw ErrorHandler::ErrorException("Wrong syntax: host");
 
     this->_host = inet_addr(parametr.c_str());
     // string.c_str() vs string.data()
@@ -118,10 +119,10 @@ void ServerConfig::setHost(std::string parametr)
     // this->_host = inet_addr(parametr.data());
 }
 
-void ServerConfig::setRoot(std::string root)
+void ServerBlock::setRoot(std::string root)
 {
 	checkToken(root);
-	if (ConfigFile::getTypePath(root) == 2) // directory라면 그대로 root 설정
+	if (getTypePath(root) == 2) // directory라면 그대로 root 설정
 	{
 		this->_root = root;
 		return ;
@@ -130,49 +131,43 @@ void ServerConfig::setRoot(std::string root)
 	char dir[1024];
 	getcwd(dir, 1024);
 	std::string full_root = dir + root;
-	if (ConfigFile::getTypePath(full_root) != 2) // 그럼에도 directory가 아니라면 예외 throw
-		throw ErrorException("Wrong syntax: root");
+	if (getTypePath(full_root) != 2) // 그럼에도 directory가 아니라면 예외 throw
+		throw ErrorHandler::ErrorException("Wrong syntax: root");
 	this->_root = full_root;
 }
 
-void ServerConfig::setPort(std::string parametr)
+void ServerBlock::setPort(std::string parametr)
 {
 	unsigned int port;
 	
 	port = 0;
 	checkToken(parametr);
 	// 인자가 숫자인지 검사 후 아니라면 예외처리
-	for (size_t i = 0; i < parametr.length(); i++)
-	{
-		if (!std::isdigit(parametr[i]))
-			throw ErrorException("Wrong syntax: port");
-	}
+    if (!isNumber(parametr))
+        throw ErrorHandler::ErrorException("Wrong syntax: port");
+
 	port = ft_stoi((parametr));
 	if (port < 1 || port > 65535)
-		throw ErrorException("Wrong syntax: port");
-	this->port = static_cast<uint16_t>(port);
+		throw ErrorHandler::ErrorException("Wrong syntax: port");
+	this->_port = static_cast<uint16_t>(port);
 	
 	// fix : max_port number is 65535. before value was 65636
 	// refactor : c-style casting 대신 static_cast 사용
 	// this->_port = (uint16_t) port;
 }
 
-void ServerConfig::setClientMaxBodySize(std::string parametr)
+void ServerBlock::setClientMaxBodySize(std::string parametr)
 {
 	unsigned long body_size;
 	
 	body_size = 0;
 	checkToken(parametr);
-	for (size_t i = 0; i < parametr.length(); i++)
-	{
-		// refactor : 직접 비교 대신 std::isdigit 사용
-		// if (parametr[i] < '0' || parametr[i] > '9')
-		if (!std::isdigit(parametr[i]))
-			throw ErrorException("Wrong syntax: client_max_body_size");
-	}
+    if (!isNumber(parametr))
+        throw ErrorHandler::ErrorException("Wrong syntax: client_max_body_size");
+
 	body_size = ft_stoi(parametr);
 	if (!body_size)
-		throw ErrorException("Wrong syntax: client_max_body_size");
+		throw ErrorHandler::ErrorException("Wrong syntax: client_max_body_size");
 	this->_client_max_body_size = body_size;
 	
 	// refactor : 불필요한 ft_stoi 중복호출 생략
@@ -181,14 +176,14 @@ void ServerConfig::setClientMaxBodySize(std::string parametr)
 	// body_size = ft_stoi(parametr);
 }
 
-void ServerConfig::setAutoindex(std::string autoindex)
+void ServerBlock::setAutoindex(std::string autoindex)
 {
 	checkToken(autoindex);
 	// on일경우 true로, off일경우 false로, 둘다 아닐경우 예외 throw
 	if (autoindex == "on" || autoindex == "off")
 		this->_autoindex = (autoindex == "on");
 	else
-		throw ErrorException("Wrong syntax: autoindex");
+		throw ErrorHandler::ErrorException("Wrong syntax: autoindex");
 	
 	// refactor : 
 	// if (autoindex != "on" && autoindex != "off") 
@@ -198,38 +193,38 @@ void ServerConfig::setAutoindex(std::string autoindex)
 }
 
 /* 입력받는 <error_pages, path> pair를 map에 설정 혹은 추가함 */
-void ServerConfig::setErrorPages(std::vector<std::string> &parametr)
+void ServerBlock::setErrorPages(std::vector<std::string> &parametr)
 {
 	if (parametr.empty())
 		return;
 	// 현재 인자 vector는 에러코드 - 파일경로 - 에러코드 - 파일경로 - ... 으로 구성됨
 	if (parametr.size() % 2 != 0)
-		throw ErrorException ("Error page initialization faled");
+		throw ErrorHandler::ErrorException ("Error page initialization faled");
 	for (size_t i = 0; i < parametr.size() - 1; i++)
 	{
 		for (size_t j = 0; j < parametr[i].size(); j++) // 모두 숫자인지 확인
 		{
 			if (!std::isdigit(parametr[i][j]))
-				throw ErrorException("Error code is invalid");
+				throw ErrorHandler::ErrorException("Error code is invalid");
 		}
 		if (parametr[i].size() != 3) // HTTP response code는 1XX ~ 5XX
-			throw ErrorException("Error code is invalid");
+			throw ErrorHandler::ErrorException("Error code is invalid");
 	
 		short code_error = ft_stoi(parametr[i]);
-		if (statusCodeString(code_error)  == "Undefined" || code_error < 400) // client error : 400+, server error : 500+
-			throw ErrorException ("Incorrect error code: " + parametr[i]);
+		if (statusCodetoString(code_error)  == "Undefined" || code_error < 400) // client error : 400+, server error : 500+
+			throw ErrorHandler::ErrorException ("Incorrect error code: " + parametr[i]);
 
 		i++; // 이제 받은 code_error에 해당하는 경로로 이동
 		std::string path = parametr[i];
 		checkToken(path);
-		if (ConfigFile::getTypePath(path) != 2) // directory가 아닐경우, 보정
+		if (getTypePath(path) != 2) // directory가 아닐경우, 보정
 		{
-			if (ConfigFile::getTypePath(this->_root + path) != 1) // root + path 결과가 파일이 아닐경우 예외처리
-				throw ErrorException ("Incorrect path for error page file: " + this->_root + path);
+			if (getTypePath(this->_root + path) != 1) // root + path 결과가 파일이 아닐경우 예외처리
+				throw ErrorHandler::ErrorException ("Incorrect path for error page file: " + this->_root + path);
 			// refactor : 불필요한 함수 호출 제거. R_OK는 존재여부(0)과 읽기여부(4)를 동시에 체크한다.
-			// if (ConfigFile::checkFile(this->_root + path, 0) == -1 || ConfigFile::checkFile(this->_root + path, 4) == -1) // 해당 파일이 열수 없을경우
-			if (ConfigFile::checkFile(this->_root + path, R_OK) == -1)
-				throw ErrorException ("Error page file :" + this->_root + path + " is not accessible");
+			// if (checkFile(this->_root + path, 0) == -1 || checkFile(this->_root + path, 4) == -1) // 해당 파일이 열수 없을경우
+			if (checkFile(this->_root + path, R_OK) == -1)
+				throw ErrorHandler::ErrorException ("Error page file :" + this->_root + path + " is not accessible");
 		}
 
 		// error_page map에서 code_error에 경로를 넣어준다. 없으면 추가한다.
@@ -243,9 +238,9 @@ void ServerConfig::setErrorPages(std::vector<std::string> &parametr)
 }
 
 /* 입력받은 정보 벡터를 Location으로 저장 */
-void ServerConfig::setLocation(std::string path, std::vector<std::string> parametr)
+void ServerBlock::setLocation(std::string path, std::vector<std::string> parametr)
 {
-	Location new_location;
+	LocationBlock new_location;
 	std::vector<std::string> methods;
 	bool flag_methods = false;
 	bool flag_autoindex = false;
@@ -263,11 +258,11 @@ void ServerConfig::setLocation(std::string path, std::vector<std::string> parame
 		{
 			// 이미 root값이 들어간 적이 있다면 예외 throw
 			if (!new_location.getRootLocation().empty())
-				throw ErrorException("Root of location is duplicated");
+				throw ErrorHandler::ErrorException("Root of location is duplicated");
 			checkToken(parametr[++i]); // root 다음 파라미터 세미콜론 제거
 
 			// 만약 파라미터가 directory라면 그대로 location의 rootlocation으로 저장, 아니라면 현재 server block의 root + 파라미터로 저장
-			if (ConfigFile::getTypePath(parametr[i]) == 2)
+			if (getTypePath(parametr[i]) == 2)
 				new_location.setRootLocation(parametr[i]);
 			else
 				new_location.setRootLocation(this->_root + parametr[i]);
@@ -276,7 +271,7 @@ void ServerConfig::setLocation(std::string path, std::vector<std::string> parame
 		{
 			// 이미 allow_methods가 들어온적이 있다면 예외 throw
 			if (flag_methods)
-				throw ErrorException("Allow_methods of location is duplicated");
+				throw ErrorHandler::ErrorException("Allow_methods of location is duplicated");
 
 			std::vector<std::string> methods;
 			while (++i < parametr.size())
@@ -291,7 +286,7 @@ void ServerConfig::setLocation(std::string path, std::vector<std::string> parame
 				{
 					methods.push_back(parametr[i]);
 					if (i + 1 >= parametr.size()) // 만약 다음이 없다면 예외 throw (세미콜론으로 끝나지 않음)
-						throw ErrorException("Token is invalid");
+						throw ErrorHandler::ErrorException("Token is invalid");
 				}
 			}
 			new_location.setMethods(methods); // location의 method set
@@ -300,9 +295,9 @@ void ServerConfig::setLocation(std::string path, std::vector<std::string> parame
 		else if (parametr[i] == "autoindex" && (i + 1) < parametr.size())
 		{
 			if (path == "/cgi-bin") // 경로가 cgi-bin일경우 예외 throw : CGI는 autoindex 지원안함
-				throw ErrorException("Parametr autoindex not allow for CGI");
+				throw ErrorHandler::ErrorException("Parametr autoindex not allow for CGI");
 			if (flag_autoindex) // autoindex가 두번째 나오는거라면 예외 throw
-				throw ErrorException("Autoindex of location is duplicated");
+				throw ErrorHandler::ErrorException("Autoindex of location is duplicated");
 			// 다음 인자에서 세미콜론 제거 뒤 setAutoindex 호출로 autoindex 값 설정 (off or on)
 			checkToken(parametr[++i]);
 			new_location.setAutoindex(parametr[i]);
@@ -311,25 +306,25 @@ void ServerConfig::setLocation(std::string path, std::vector<std::string> parame
 		else if (parametr[i] == "index" && (i + 1) < parametr.size())
 		{
 			if (!new_location.getIndexLocation().empty())
-				throw ErrorException("Index of location is duplicated");
+				throw ErrorHandler::ErrorException("Index of location is duplicated");
 			checkToken(parametr[++i]);
 			new_location.setIndexLocation(parametr[i]);
 		}
 		else if (parametr[i] == "return" && (i + 1) < parametr.size())
 		{
 			if (path == "/cgi-bin")
-				throw ErrorException("Parametr return not allow for CGI");
+				throw ErrorHandler::ErrorException("Parametr return not allow for CGI");
 			if (!new_location.getReturn().empty())
-				throw ErrorException("Return of location is duplicated");
+				throw ErrorHandler::ErrorException("Return of location is duplicated");
 			checkToken(parametr[++i]);
 			new_location.setReturn(parametr[i]);
 		}
 		else if (parametr[i] == "alias" && (i + 1) < parametr.size())
 		{
 			if (path == "/cgi-bin")
-				throw ErrorException("Parametr alias not allow for CGI");
+				throw ErrorHandler::ErrorException("Parametr alias not allow for CGI");
 			if (!new_location.getAlias().empty())
-				throw ErrorException("Alias of location is duplicated");
+				throw ErrorHandler::ErrorException("Alias of location is duplicated");
 			checkToken(parametr[++i]);
 			new_location.setAlias(parametr[i]);
 		}
@@ -348,7 +343,7 @@ void ServerConfig::setLocation(std::string path, std::vector<std::string> parame
 				{
 					extension.push_back(parametr[i]);
 					if (i + 1 >= parametr.size())
-						throw ErrorException("Token is invalid");
+						throw ErrorHandler::ErrorException("Token is invalid");
 				}
 			}
 			new_location.setCgiExtension(extension);
@@ -368,23 +363,23 @@ void ServerConfig::setLocation(std::string path, std::vector<std::string> parame
 				{
 					path.push_back(parametr[i]);
 					if (i + 1 >= parametr.size())
-						throw ErrorException("Token is invalid");
+						throw ErrorHandler::ErrorException("Token is invalid");
 				}
 				if (parametr[i].find("/python") == std::string::npos && parametr[i].find("/bash") == std::string::npos)
-					throw ErrorException("cgi_path is invalid");
+					throw ErrorHandler::ErrorException("cgi_path is invalid");
 			}
 			new_location.setCgiPath(path);
 		}
 		else if (parametr[i] == "client_max_body_size" && (i + 1) < parametr.size())
 		{
 			if (flag_max_size)
-				throw ErrorException("Maxbody_size of location is duplicated");
+				throw ErrorHandler::ErrorException("Maxbody_size of location is duplicated");
 			checkToken(parametr[++i]);
 			new_location.setMaxBodySize(parametr[i]);
 			flag_max_size = true;
 		}
 		else if (i < parametr.size())
-			throw ErrorException("Parametr in a location is invalid");
+			throw ErrorHandler::ErrorException("Parametr in a location is invalid");
 	} // end for
 
 	// 만약 Path가 /cgi-bin이 아니고, location의 index가 설정되지 않았다면 server block의 index로 설정 (Location 블록에서 따로 index가 명시되지 않으면 server 블록과 동일)
@@ -397,13 +392,14 @@ void ServerConfig::setLocation(std::string path, std::vector<std::string> parame
 	// 생성한 location의 validation
 	valid = isValidLocation(new_location);
 	if (valid == 1)
-		throw ErrorException("Failed CGI validation");
+		;
+		// throw ErrorHandler::ErrorException("Failed CGI validation"); /* check */ implement later
 	else if (valid == 2)
-		throw ErrorException("Failed path in locaition validation");
+		throw ErrorHandler::ErrorException("Failed path in locaition validation");
 	else if (valid == 3)
-		throw ErrorException("Failed redirection file in locaition validation");
+		throw ErrorHandler::ErrorException("Failed redirection file in locaition validation");
 	else if (valid == 4)
-		throw ErrorException("Failed alias file in locaition validation");
+		throw ErrorHandler::ErrorException("Failed alias file in locaition validation");
 	// location 정보를 server_config 구조체의 _locations에 저장
 	this->_locations.push_back(new_location);
 }
@@ -413,7 +409,7 @@ void ServerConfig::setLocation(std::string path, std::vector<std::string> parame
 /* --------------------------------------------------------------------------- */
 
 /* host 주소가 valid한지 검사한다. */
-bool ServerConfig::isValidHost(std::string host) const
+bool ServerBlock::isValidHost(std::string host) const
 {
 	struct sockaddr_in sockaddr;
     
@@ -426,21 +422,21 @@ bool ServerConfig::isValidHost(std::string host) const
 }
 
 /* error pages가 valid한지 검사한다. */
-bool ServerConfig::isValidErrorPages()
+bool ServerBlock::isValidErrorPages()
 {
 	std::map<short, std::string>::const_iterator it;
 	for (it = this->_error_pages.begin(); it != this->_error_pages.end(); it++)
 	{
 		if (it->first < 100 || it->first > 599) // HTTP response code는 1XX ~ 5XX (custon response code도 고려)
 			return (false);
-		if (ConfigFile::checkFile(getRoot() + it->second, R_OK) < 0)
+		if (checkFile(getRoot() + it->second, R_OK) < 0)
 			return (false);
 	}
 	return (true);
 }
 
 /* location이 valid한지 검사한다. 1은 CGI 오류, 2는 path 오류, 3은 redirection file 오류, 4는 alias file 오류, 0은 정상 */
-int ServerConfig::isValidLocation(Location &location) const
+int ServerBlock::isValidLocation(LocationBlock &location) const
 {
 	// 만약 path가 /cgi-bin 일 경우, CGI에 대한 valid를 진행한다.
 	if (location.getPath() == "/cgi-bin")
@@ -450,16 +446,16 @@ int ServerConfig::isValidLocation(Location &location) const
 			return (1);
 
 		// index 파일을 읽을 수 없으면, root/path/index 탐색, 없으면 현재디렉토리/path/index 탐색, 모두 실패시 (없거나 읽을수 없음) 에러
-		if (ConfigFile::checkFile(location.getIndexLocation(), R_OK) < 0)
+		if (checkFile(location.getIndexLocation(), R_OK) < 0)
 		{
 			std::string path = location.getRootLocation() + location.getPath() + "/" + location.getIndexLocation();
-			if (ConfigFile::getTypePath(path) != 1)
+			if (getTypePath(path) != 1)
 			{				
 				std::string root = getcwd(NULL, 0);
 				location.setRootLocation(root);
 				path = root + location.getPath() + "/" + location.getIndexLocation();
 			}
-			if (path.empty() || ConfigFile::getTypePath(path) != 1 || ConfigFile::checkFile(path, R_OK) < 0)
+			if (path.empty() || getTypePath(path) != 1 || checkFile(path, R_OK) < 0)
 				return (1);
 		}
 		// cgi_path와 cgi_extension의 수가 다를경우 에러 (둘다 std::vector<std::string>)
@@ -470,7 +466,7 @@ int ServerConfig::isValidLocation(Location &location) const
 		std::vector<std::string>::const_iterator it;
 		for (it = location.getCgiPath().begin(); it != location.getCgiPath().end(); ++it)
 		{
-			if (ConfigFile::getTypePath(*it) < 0)
+			if (getTypePath(*it) < 0)
 				return (1);
 		}
 		// cgi_exteision을 탐색하며 .py 나 .sh 파일이 아니면 에러
@@ -512,18 +508,18 @@ int ServerConfig::isValidLocation(Location &location) const
 			location.setRootLocation(this->_root);
 		}
 		// index 파일이 읽을수 있는지 확인한다. 먼저 index를 확인하고, 실패하면 root/path/index를 확인한다. 성공시 0, 실패시 -1 반환
-		if (ConfigFile::isFileExistAndReadable(location.getRootLocation() + location.getPath() + "/", location.getIndexLocation()))
+		if (isFileExistAndReadable(location.getRootLocation() + location.getPath() + "/", location.getIndexLocation()))
 			return (5);
 		// return 이 비었지 않다면, return 및 root/return 이 readable한지 확인.
 		if (!location.getReturn().empty())
 		{
-			if (ConfigFile::isFileExistAndReadable(location.getRootLocation(), location.getReturn()))
+			if (isFileExistAndReadable(location.getRootLocation(), location.getReturn()))
 				return (3);
 		}
 		// alias 가 비어있지 않다면, alias 및 root/alias 가 readable한지 확인.
 		if (!location.getAlias().empty())
 		{
-			if (ConfigFile::isFileExistAndReadable(location.getRootLocation(), location.getAlias()))
+			if (isFileExistAndReadable(location.getRootLocation(), location.getAlias()))
 			 	return (4);
 		}
 	}
@@ -535,93 +531,93 @@ int ServerConfig::isValidLocation(Location &location) const
 /* ------------------------------ get methods -------------------------------- */
 /* --------------------------------------------------------------------------- */
 
-const std::string &ServerConfig::getServerName()
+const std::string &ServerBlock::getServerName()
 {
 	return (this->_server_name);
 }
 
-const std::string &ServerConfig::getRoot()
+const std::string &ServerBlock::getRoot()
 {
 	return (this->_root);
 }
 
-const bool &ServerConfig::getAutoindex()
+const bool &ServerBlock::getAutoindex()
 {
 	return (this->_autoindex);
 }
 
-const in_addr_t &ServerConfig::getHost()
+const in_addr_t &ServerBlock::getHost()
 {
 	return (this->_host);
 }
 
-const uint16_t &ServerConfig::getPort()
+const uint16_t &ServerBlock::getPort()
 {
 	return (this->_port);
 }
 
-const size_t &ServerConfig::getClientMaxBodySize()
+const size_t &ServerBlock::getClientMaxBodySize()
 {
 	return (this->_client_max_body_size);
 }
 
-const std::vector<Location> &ServerConfig::getLocations()
+const std::vector<LocationBlock> &ServerBlock::getLocations()
 {
 	return (this->_locations);
 }
 
-const std::map<short, std::string> &ServerConfig::getErrorPages()
+const std::map<short, std::string> &ServerBlock::getErrorPages()
 {
 	return (this->_error_pages);
 }
 
-const std::string &ServerConfig::getIndex()
+const std::string &ServerBlock::getIndex()
 {
 	return (this->_index);
 }
 
-int   	ServerConfig::getFd() 
+int   	ServerBlock::getFd() 
 { 
 	return (this->_listen_fd); 
 }
 
 /* the two functions below can be used later for response */
-const std::string &ServerConfig::getPathErrorPage(short key)
+const std::string &ServerBlock::getPathErrorPage(short key)
 {
 	std::map<short, std::string>::iterator it = this->_error_pages.find(key);
 	if (it == this->_error_pages.end())
-		throw ErrorException("Error_page does not exist");
+		throw ErrorHandler::ErrorException("Error_page does not exist");
 	return (it->second);
 }
 
 /* find location by a name */ //do not using in parser, created for server manager
-const std::vector<Location>::iterator ServerConfig::getLocationKey(std::string key)
+const std::vector<LocationBlock>::iterator ServerBlock::getLocationKey(std::string key)
 {
-	std::vector<Location>::iterator it;
+	std::vector<LocationBlock>::iterator it;
 	for (it = this->_locations.begin(); it != this->_locations.end(); it++)
 	{
 		if (it->getPath() == key)
 			return (it);
 	}
-	throw ErrorException("Error: path to location not found");
+	throw ErrorHandler::ErrorException("Error: path to location not found");
 }
 
 /* 세미콜론이 문자열 끝에만 위치한지 확인하고, 아니라면 예외 throw, 맞다면 세미콜론 제거 */
-void ServerConfig::checkToken(std::string &parametr)
+void ServerBlock::checkToken(std::string &parametr)
 {
 	size_t pos = parametr.rfind(';');
 	if (pos != parametr.size() - 1)
-		throw ErrorException("Token is invalid");
+		throw ErrorHandler::ErrorException("Token is invalid");
 	parametr.erase(pos);
 }
 
 /* 각 location을 순회하며 중복된 path를 가진게 있는지 확인 */
-bool ServerConfig::checkLocaitons() const
+bool ServerBlock::checkLocaitons() const
 {
 	if (this->_locations.size() < 2)
 		return (false);
-	std::vector<Location>::const_iterator it1;
-	std::vector<Location>::const_iterator it2;
+	std::vector<LocationBlock>::const_iterator it1;
+	std::vector<LocationBlock>::const_iterator it2;
 	for (it1 = this->_locations.begin(); it1 != this->_locations.end() - 1; it1++) {
 		for (it2 = it1 + 1; it2 != this->_locations.end(); it2++) {
 			if (it1->getPath() == it2->getPath())
@@ -632,11 +628,11 @@ bool ServerConfig::checkLocaitons() const
 }
 
 /* socket setup and binding */
-void	ServerConfig::setupServer(void)
+void	ServerBlock::setupServer(void)
 {
 	if ((_listen_fd = socket(AF_INET, SOCK_STREAM, 0) )  == -1 )
     {
-		Logger::logMsg(RED, CONSOLE_OUTPUT, "webserv: socket error %s   Closing ....", strerror(errno));
+		//Logger::logMsg(RED, CONSOLE_OUTPUT, "webserv: socket error %s   Closing ....", strerror(errno));
         exit(EXIT_FAILURE);
     }
 
@@ -648,7 +644,29 @@ void	ServerConfig::setupServer(void)
     _server_address.sin_port = htons(_port);
     if (bind(_listen_fd, (struct sockaddr *) &_server_address, sizeof(_server_address)) == -1)
     {
-		Logger::logMsg(RED, CONSOLE_OUTPUT, "webserv: bind error %s   Closing ....", strerror(errno));
+		//Logger::logMsg(RED, CONSOLE_OUTPUT, "webserv: bind error %s   Closing ....", strerror(errno));
         exit(EXIT_FAILURE);
     }
+}
+
+const void ServerBlock::printServerBlock()
+{
+	struct sockaddr_in sockaddr;
+	sockaddr.sin_addr.s_addr = this->_host;
+
+	std::cout << RED << "---------- Server ----------" << CYN << std::endl;
+	std::cout << "port :\t" << this->_port << std::endl;
+	std::cout << "host :\t" << inet_ntoa(sockaddr.sin_addr) << std::endl;
+	std::cout << "server_name :\t" << this->_server_name << std::endl;
+	std::cout << "root :\t" << this->_root << std::endl;
+	std::cout << "index :\t" << this->_index << std::endl;
+	std::cout << "autoindex :\t" << this->_autoindex << std::endl;
+	std::cout << "listen_fd :\t" << this->_listen_fd << std::endl;
+	std::cout << "cmaxbsize : \t" << this->_client_max_body_size << std::endl;
+	std::cout << "error_pages :\t" << std::endl;
+	for (std::map<short, std::string>::iterator it = this->_error_pages.begin(); it != this->_error_pages.end(); it++)
+		std::cout << it->first << " " << it->second << std::endl;
+	for (std::vector<LocationBlock>::iterator it = this->_locations.begin(); it != this->_locations.end(); it++)
+		it->printLocationBlock();
+	std::cout << NC;
 }
