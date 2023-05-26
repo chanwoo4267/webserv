@@ -78,7 +78,7 @@ int isFileExistAndReadable(std::string const path, std::string const index)
 /* 파일을 읽어 하나의 문자열로 저장 */
 std::string	readFile(std::string path)
 {
-	if (path.empty() || path.length() == 0)
+	if (path.empty())
 		return (NULL);
 
 	std::ifstream config_file(path.c_str());
@@ -89,7 +89,7 @@ std::string	readFile(std::string path)
     /* 스트림 버퍼의 모든 내용물을 stringstream 으로 넣어준다. 이후 stringstream.str() 을 통해 스트림 내용물을 문자열로 변환하여 반환한다. */
 	std::stringstream stream_binding;
 	stream_binding << config_file.rdbuf(); //rdbuf() : 스트림 버퍼를 연관시키거나 얻는다.
-	return (stream_binding.str());
+	return (stream_binding.str()); // ifstream은 소멸자 호출시 자동으로 close됨
 }
 
 std::string statusCodetoString(int error_code)
@@ -301,4 +301,13 @@ std::vector<std::string> splitParametrs(std::string line, std::string sep)
 			break;
 	}
 	return (str);
+}
+
+/* 세미콜론이 문자열 끝에만 위치한지 확인하고, 아니라면 예외 throw, 맞다면 세미콜론 제거 */
+void removeSemicolon(std::string &parametr)
+{
+	size_t pos = parametr.rfind(';');
+	if (pos != parametr.size() - 1)
+		throw ErrorHandler::ErrorException("Token is invalid");
+	parametr.erase(pos);
 }

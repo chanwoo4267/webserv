@@ -86,13 +86,11 @@ void ServerBlock::initErrorPages(void)
 
 void ServerBlock::setServerName(std::string server_name)
 {
-	checkToken(server_name); // 끝에 세미콜론이 있는지 확인 후 없으면 예외 throw, 있으면 제거해줌
 	this->_server_name = server_name;
 }
 
 void ServerBlock::setIndex(std::string index)
 {
-	checkToken(index);
 	this->_index = index;
 }
 
@@ -103,7 +101,6 @@ void	ServerBlock::setFd(int fd)
 
 void ServerBlock::setHost(std::string parametr)
 {
-	checkToken(parametr);
 	if (parametr == "localhost") // localhost는 자동으로 127.0.0.1로 변환 후 저장
 		parametr = "127.0.0.1";
 	if (!isValidHost(parametr)) // host가 valid한지 확인, valid하지 않다면 예외를 throw
@@ -121,7 +118,6 @@ void ServerBlock::setHost(std::string parametr)
 
 void ServerBlock::setRoot(std::string root)
 {
-	checkToken(root);
 	if (getTypePath(root) == 2) // directory라면 그대로 root 설정
 	{
 		this->_root = root;
@@ -141,7 +137,6 @@ void ServerBlock::setPort(std::string parametr)
 	unsigned int port;
 	
 	port = 0;
-	checkToken(parametr);
 	// 인자가 숫자인지 검사 후 아니라면 예외처리
     if (!isNumber(parametr))
         throw ErrorHandler::ErrorException("Wrong syntax: port");
@@ -161,7 +156,6 @@ void ServerBlock::setClientMaxBodySize(std::string parametr)
 	unsigned long body_size;
 	
 	body_size = 0;
-	checkToken(parametr);
     if (!isNumber(parametr))
         throw ErrorHandler::ErrorException("Wrong syntax: client_max_body_size");
 
@@ -178,7 +172,6 @@ void ServerBlock::setClientMaxBodySize(std::string parametr)
 
 void ServerBlock::setAutoindex(std::string autoindex)
 {
-	checkToken(autoindex);
 	// on일경우 true로, off일경우 false로, 둘다 아닐경우 예외 throw
 	if (autoindex == "on" || autoindex == "off")
 		this->_autoindex = (autoindex == "on");
@@ -195,6 +188,9 @@ void ServerBlock::setAutoindex(std::string autoindex)
 /* 입력받는 <error_pages, path> pair를 map에 설정 혹은 추가함 */
 void ServerBlock::setErrorPages(std::vector<std::string> &parametr)
 {
+	std::string path;
+	std::map<short, std::string>::iterator it;
+
 	if (parametr.empty())
 		return;
 	// 현재 인자 vector는 에러코드 - 파일경로 - 에러코드 - 파일경로 - ... 으로 구성됨
@@ -215,8 +211,8 @@ void ServerBlock::setErrorPages(std::vector<std::string> &parametr)
 			throw ErrorHandler::ErrorException ("Incorrect error code: " + parametr[i]);
 
 		i++; // 이제 받은 code_error에 해당하는 경로로 이동
-		std::string path = parametr[i];
-		checkToken(path);
+		path = parametr[i];
+		removeSemicolon(path);
 		if (getTypePath(path) != 2) // directory가 아닐경우, 보정
 		{
 			if (getTypePath(this->_root + path) != 1) // root + path 결과가 파일이 아닐경우 예외처리
@@ -228,7 +224,7 @@ void ServerBlock::setErrorPages(std::vector<std::string> &parametr)
 		}
 
 		// error_page map에서 code_error에 경로를 넣어준다. 없으면 추가한다.
-		std::map<short, std::string>::iterator it = this->_error_pages.find(code_error);
+		it = this->_error_pages.find(code_error);
 		if (it != _error_pages.end())
 			this->_error_pages[code_error] = path;
 		else
@@ -259,7 +255,7 @@ void ServerBlock::setLocation(std::string path, std::vector<std::string> paramet
 			// 이미 root값이 들어간 적이 있다면 예외 throw
 			if (!new_location.getRootLocation().empty())
 				throw ErrorHandler::ErrorException("Root of location is duplicated");
-			checkToken(parametr[++i]); // root 다음 파라미터 세미콜론 제거
+			removeSemicolon(parametr[++i]); // root 다음 파라미터 세미콜론 제거
 
 			// 만약 파라미터가 directory라면 그대로 location의 rootlocation으로 저장, 아니라면 현재 server block의 root + 파라미터로 저장
 			if (getTypePath(parametr[i]) == 2)
@@ -278,7 +274,7 @@ void ServerBlock::setLocation(std::string path, std::vector<std::string> paramet
 			{
 				if (parametr[i].find(";") != std::string::npos) // 파라미터에 세미콜론이 있다면 세미콜론 제거 후 넣기
 				{
-					checkToken(parametr[i]);
+					removeSemicolon(parametr[i]);
 					methods.push_back(parametr[i]);
 					break ; // 반복 종료
 				}
@@ -299,7 +295,7 @@ void ServerBlock::setLocation(std::string path, std::vector<std::string> paramet
 			if (flag_autoindex) // autoindex가 두번째 나오는거라면 예외 throw
 				throw ErrorHandler::ErrorException("Autoindex of location is duplicated");
 			// 다음 인자에서 세미콜론 제거 뒤 setAutoindex 호출로 autoindex 값 설정 (off or on)
-			checkToken(parametr[++i]);
+			removeSemicolon(parametr[++i]);
 			new_location.setAutoindex(parametr[i]);
 			flag_autoindex = true; // 중복등장 방지
 		}
@@ -307,7 +303,7 @@ void ServerBlock::setLocation(std::string path, std::vector<std::string> paramet
 		{
 			if (!new_location.getIndexLocation().empty())
 				throw ErrorHandler::ErrorException("Index of location is duplicated");
-			checkToken(parametr[++i]);
+			removeSemicolon(parametr[++i]);
 			new_location.setIndexLocation(parametr[i]);
 		}
 		else if (parametr[i] == "return" && (i + 1) < parametr.size())
@@ -316,7 +312,7 @@ void ServerBlock::setLocation(std::string path, std::vector<std::string> paramet
 				throw ErrorHandler::ErrorException("Parametr return not allow for CGI");
 			if (!new_location.getReturn().empty())
 				throw ErrorHandler::ErrorException("Return of location is duplicated");
-			checkToken(parametr[++i]);
+			removeSemicolon(parametr[++i]);
 			new_location.setReturn(parametr[i]);
 		}
 		else if (parametr[i] == "alias" && (i + 1) < parametr.size())
@@ -325,7 +321,7 @@ void ServerBlock::setLocation(std::string path, std::vector<std::string> paramet
 				throw ErrorHandler::ErrorException("Parametr alias not allow for CGI");
 			if (!new_location.getAlias().empty())
 				throw ErrorHandler::ErrorException("Alias of location is duplicated");
-			checkToken(parametr[++i]);
+			removeSemicolon(parametr[++i]);
 			new_location.setAlias(parametr[i]);
 		}
 		else if (parametr[i] == "cgi_ext" && (i + 1) < parametr.size())
@@ -335,7 +331,7 @@ void ServerBlock::setLocation(std::string path, std::vector<std::string> paramet
 			{
 				if (parametr[i].find(";") != std::string::npos)
 				{
-					checkToken(parametr[i]);
+					removeSemicolon(parametr[i]);
 					extension.push_back(parametr[i]);
 					break ;
 				}
@@ -355,7 +351,7 @@ void ServerBlock::setLocation(std::string path, std::vector<std::string> paramet
 			{
 				if (parametr[i].find(";") != std::string::npos)
 				{
-					checkToken(parametr[i]);
+					removeSemicolon(parametr[i]);
 					path.push_back(parametr[i]);
 					break ;
 				}
@@ -374,7 +370,7 @@ void ServerBlock::setLocation(std::string path, std::vector<std::string> paramet
 		{
 			if (flag_max_size)
 				throw ErrorHandler::ErrorException("Maxbody_size of location is duplicated");
-			checkToken(parametr[++i]);
+			removeSemicolon(parametr[++i]);
 			new_location.setMaxBodySize(parametr[i]);
 			flag_max_size = true;
 		}
@@ -388,7 +384,9 @@ void ServerBlock::setLocation(std::string path, std::vector<std::string> paramet
 	// 만약 client_max_body_size가 설정되지 않았다면, server 블록의 client_max_body_size로 설정
 	if (!flag_max_size)
 		new_location.setMaxBodySize(this->_client_max_body_size);
-	
+	//cgi location이 아니고, root가 따로 설정되지 않았다면 server와 동일한 root로 설정
+	if (new_location.getPath() != "/cgi-bin" && new_location.getRootLocation().empty())
+		new_location.setRootLocation(this->_root);
 	// 생성한 location의 validation
 	valid = isValidLocation(new_location);
 	if (valid == 1)
@@ -501,12 +499,6 @@ int ServerBlock::isValidLocation(LocationBlock &location) const
 		// path경로가 / 로 시작하지 않는다면 에러
 		if (location.getPath()[0] != '/')
 			return (2);
-		// root값이 없다면 server의 root로 설정 
-		/* check */ // 이거는 여기 검사하는 항목이 아니라 location값 설정하는 setLocation() 으로 옮겨야 할것으로 보임
-		if (location.getRootLocation().empty())
-		{
-			location.setRootLocation(this->_root);
-		}
 		// index 파일이 읽을수 있는지 확인한다. 먼저 index를 확인하고, 실패하면 root/path/index를 확인한다. 성공시 0, 실패시 -1 반환
 		if (isFileExistAndReadable(location.getRootLocation() + location.getPath() + "/", location.getIndexLocation()))
 			return (5);
@@ -600,15 +592,6 @@ const std::vector<LocationBlock>::iterator ServerBlock::getLocationKey(std::stri
 			return (it);
 	}
 	throw ErrorHandler::ErrorException("Error: path to location not found");
-}
-
-/* 세미콜론이 문자열 끝에만 위치한지 확인하고, 아니라면 예외 throw, 맞다면 세미콜론 제거 */
-void ServerBlock::checkToken(std::string &parametr)
-{
-	size_t pos = parametr.rfind(';');
-	if (pos != parametr.size() - 1)
-		throw ErrorHandler::ErrorException("Token is invalid");
-	parametr.erase(pos);
 }
 
 /* 각 location을 순회하며 중복된 path를 가진게 있는지 확인 */

@@ -2,9 +2,7 @@
 # define SERVERBLOCK_HPP
 
 # include "Webserv.hpp"
-
-// front definition, 전방선언
-class LocationBlock;
+# include "LocationBlock.hpp"
 
 class ServerBlock
 {
@@ -56,7 +54,6 @@ class ServerBlock
 		const std::string &getPathErrorPage(short key);
 		const std::vector<LocationBlock>::iterator getLocationKey(std::string key);
 
-		static void checkToken(std::string &parametr);
 		bool checkLocaitons() const;
 
 		void	setupServer();

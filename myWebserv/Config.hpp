@@ -2,6 +2,7 @@
 # define CONFIG_HPP
 
 # include "Webserv.hpp"
+# include "ServerBlock.hpp"
 
 class ServerBlock;
 

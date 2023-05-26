@@ -1,13 +1,14 @@
 #include "Webserv.hpp"
+#include "ServerManager.hpp"
 
-int main()
+int main(int argc, char *argv[])
 {
-    Config config_cluster;
+    ServerManager manager;
 
     try
     {
-        config_cluster.createCluster("default.conf");
-        config_cluster.printConfig();
+        (manager.getServerConfig()).createCluster(argv[1]);
+        (manager.getServerConfig()).printConfig();
     }
     catch (std::exception &e)
     {

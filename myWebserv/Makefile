@@ -6,7 +6,8 @@ SRCS		= main.cpp \
 			  Config.cpp \
 			  LocationBlock.cpp \
 			  ServerBlock.cpp \
-			  Utility.cpp 
+			  Utility.cpp \
+			  ServerManager.cpp
 
 OBJS 	=	 $(SRCS:.cpp=.o)
 

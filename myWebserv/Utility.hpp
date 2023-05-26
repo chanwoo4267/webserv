@@ -18,5 +18,6 @@ bool both_are_spaces(char lhs, char rhs);
 void remove_duplicate_spaces_and_trim(std::string& str);
 void replaceTabsWithSpaces(std::string& str);
 std::vector<std::string> splitParametrs(std::string line, std::string sep);
+void removeSemicolon(std::string &parametr);
 
 #endif

@@ -60,6 +60,7 @@ void Config::createCluster(const std::string &config_file)
         checkServers();
 }
 
+/* 주석을 전부 제거하고, 가장 앞과 뒤의 모든 공백을 제거하고, 중간에 나오는 중복된 공백은 하나로 줄인다 */
 void Config::preprocessContent(std::string &content)
 {
     size_t pos1, pos2;
@@ -188,29 +189,26 @@ void Config::createServer(std::string &config, ServerBlock &server)
 		{
 			if (server.getPort()) // 중복된 포트 입력 예외처리
 				throw  ErrorHandler::ErrorException("createServer : duplicated port");
-			server.setPort(parametrs[++i]); // 포트 입력
+			removeSemicolon(parametrs[++i]);
+			server.setPort(parametrs[i]);
 		} 	// location이고 다음 파라미터가 있다면
 		else if (parametrs[i] == "location" && (i + 1) < parametrs.size())
 		{
 			std::string	path;
-			i++;
-      		// location 뒤에 경로가 오고, 그 뒤에 { ~ } 가 와야 함
-			if (parametrs[i] == "{" || parametrs[i] == "}")
-				throw  ErrorHandler::ErrorException("createServer : no path after location block");
 
-			path = parametrs[i]; // 경로 path에 저장
+			path = parametrs[++i]; // 경로 path에 저장
   
-			std::vector<std::string> codes;
+			std::vector<std::string> loc_info;
 			if (parametrs[++i] != "{")
 				throw  ErrorHandler::ErrorException("createServer : not '{' character");
 			i++;
   
-      		// location / { ~ } 에서 각 내용물들을 codes에 벡터 형태로 저장
+      		// location / { ~ } 에서 각 내용물들을 loc_info에 벡터 형태로 저장
 			while (i < parametrs.size() && parametrs[i] != "}")
-				codes.push_back(parametrs[i++]);
+				loc_info.push_back(parametrs[i++]);
   
       		// location으로 저장
-			server.setLocation(path, codes);
+			server.setLocation(path, loc_info);
 			if (i < parametrs.size() && parametrs[i] != "}")
 				throw  ErrorHandler::ErrorException("createServer : not '}' character");
 			flag_loc = 0;
@@ -219,13 +217,15 @@ void Config::createServer(std::string &config, ServerBlock &server)
 		{
 			if (server.getHost())
 				throw  ErrorHandler::ErrorException("createServer : duplicated host");
-			server.setHost(parametrs[++i]);
+			removeSemicolon(parametrs[++i]);
+			server.setHost(parametrs[i]);
 		} 	// root이면서 파라미터가 더 존재
 		else if (parametrs[i] == "root" && (i + 1) < parametrs.size() && flag_loc)
 		{
 			if (!server.getRoot().empty())
 				throw  ErrorHandler::ErrorException("createServer : duplicated root");
-			server.setRoot(parametrs[++i]);
+			removeSemicolon(parametrs[++i]);
+			server.setRoot(parametrs[i]);
 		} 	// error_page 이면서 파라미터가 더 존재
 		else if (parametrs[i] == "error_page" && (i + 1) < parametrs.size() && flag_loc)
 		{
@@ -242,26 +242,30 @@ void Config::createServer(std::string &config, ServerBlock &server)
 		{
 			if (flag_max_size) /* check */ // 이거뿐만 아니라, 실제 nginx에서 duplciated value에 대한 예외처리가 어떻게 되는지 확인해보기
 				throw  ErrorHandler::ErrorException("createServer : duplicated client_max_body_size");
-			server.setClientMaxBodySize(parametrs[++i]);
+			removeSemicolon(parametrs[++i]);
+			server.setClientMaxBodySize(parametrs[i]);
 			flag_max_size = true;
 		} 	// server_name 및 다음 파라미터 존재시
 		else if (parametrs[i] == "server_name" && (i + 1) < parametrs.size() && flag_loc)
 		{
 			if (!server.getServerName().empty())
 				throw  ErrorHandler::ErrorException("createServer : duplicated server_name");
-			server.setServerName(parametrs[++i]);
+			removeSemicolon(parametrs[++i]);
+			server.setServerName(parametrs[i]);
 		} 	// index 및 다음 파라미터 존재시
 		else if (parametrs[i] == "index" && (i + 1) < parametrs.size() && flag_loc)
 		{
 			if (!server.getIndex().empty())
 				throw  ErrorHandler::ErrorException("createServer : duplicated index");
-			server.setIndex(parametrs[++i]);
+			removeSemicolon(parametrs[++i]);
+			server.setIndex(parametrs[i]);
 		} 	// autoindex 및 다음 파라미터 존재시
 		else if (parametrs[i] == "autoindex" && (i + 1) < parametrs.size() && flag_loc)
 		{
 			if (flag_autoindex)
 				throw ErrorHandler::ErrorException("createServer : duplicated autoindex");
-			server.setAutoindex(parametrs[++i]);
+			removeSemicolon(parametrs[++i]);
+			server.setAutoindex(parametrs[i]);
 			flag_autoindex = true;
 		} 	// 위 옵션들이 아니면서, { } 가 아닐시 에러
 		else if (parametrs[i] != "}" && parametrs[i] != "{")
@@ -274,11 +278,11 @@ void Config::createServer(std::string &config, ServerBlock &server)
 	} // end for
 
 	if (server.getRoot().empty())
-		server.setRoot("/;");
+		server.setRoot("/");
 	if (server.getHost() == 0)
-		server.setHost("localhost;");
+		server.setHost("localhost");
 	if (server.getIndex().empty())
-		server.setIndex("index.html;");
+		server.setIndex("index.html");
 
   	// index에 대한 검사 (존재 및 accessible)
 	if (isFileExistAndReadable(server.getRoot(), server.getIndex()))

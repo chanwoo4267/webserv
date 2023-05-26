@@ -43,11 +43,12 @@
 # include <arpa/inet.h>
 
 /* my files */
-# include "LocationBlock.hpp"
+// # include "LocationBlock.hpp"
 # include "Utility.hpp"
 # include "ErrorHandler.hpp"
-# include "ServerBlock.hpp"
-# include "Config.hpp"
+// # include "ServerBlock.hpp"
+// # include "ServerManager.hpp"
+// # include "Config.hpp"
 
 #define CONNECTION_TIMEOUT 60 // 아무 데이터 전송이 없으면 클라이언트가 서버로부터 추방되는데 걸리는 시간 (초 단위)
 
