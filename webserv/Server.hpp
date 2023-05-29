@@ -12,18 +12,18 @@ class Server
         std::string                     _server_root;
         std::string                     _server_index;
         std::string                     _server_return;
-        std::string                     _server_host; //in_addr_t
-        std::string                     _server_port; //uint16_t
         std::map<short, std::string>    _server_error_pages;
         std::vector<Location>           _server_locations;
         bool                            _server_autoindex;
         int                             _server_listen_socket;
+        std::string                     _server_host; //in_addr_t
+        std::string                     _server_port; //uint16_t
 
     public:
         Server();
 	    ~Server();
 	    Server(const Server& obj);
-	    Server &operator=(const Server& obj);
+	    Server& operator=(const Server& obj);
 
         /* get methods */
         const size_t& getServerClientMaxBodySize();

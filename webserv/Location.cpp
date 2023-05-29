@@ -23,7 +23,7 @@ Location::Location(const Location &obj)
     this->_location_cgi_info = obj._location_cgi_info;
 }
 
-Location &Location::operator=(const Location &obj)
+Location& Location::operator=(const Location &obj)
 {
     if (this != &obj)
     {
@@ -38,7 +38,10 @@ Location &Location::operator=(const Location &obj)
     return *this;
 }
 
-/* get methods */
+/* -------------------------------------------------- */
+/* -------------------get methods-------------------- */
+/* -------------------------------------------------- */
+
 const size_t& Location::getLocationClientMaxBodySize()
 {
     return this->_location_client_max_body_size;
@@ -79,7 +82,10 @@ const std::map<std::string, std::string>& Location::getLocationCgiInfo()
     return this->_location_cgi_info;
 }
 
-/* set methods */
+/* -------------------------------------------------- */
+/* -------------------set methods-------------------- */
+/* -------------------------------------------------- */
+
 void Location::setLocationClientMaxBodySize(size_t size)
 {
     this->_location_client_max_body_size = size;

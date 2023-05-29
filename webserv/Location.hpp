@@ -19,7 +19,7 @@ class Location
         Location();
 	    ~Location();
 	    Location(const Location& obj);
-	    Location &operator=(const Location& obj);
+	    Location& operator=(const Location& obj);
 
         /* get methods */
         const size_t& getLocationClientMaxBodySize();
