@@ -185,7 +185,7 @@ static void removeDupAndMostSpacesAndNewlines(std::string& str)
     validate file, open file and read its content to string
     then, split string per server block strings.
 */
-void parseConfigFile(std::string& config_file_path)
+void parseConfigFile(std::string& config_file_path, Cluster& cluster)
 {
     std::vector<Server> server_vector;
     std::vector<std::string> server_strings;
@@ -206,14 +206,41 @@ void parseConfigFile(std::string& config_file_path)
     preprocessFileContent(content);
     splitContentByServers(content, server_strings);
     parseStringToServers(server_strings, server_vector);
+    cluster.setClusterServers(server_vector);
 }
 
 /*
-    parse server_block info strings to Servers vector.
+    parse several server_block info strings to Servers vector.
+
+    input : "server { ~ }", "server { ~ }", ...
 */
 void parseStringToServers(std::vector<std::string>& server_strings, std::vector<Server>& server_vector)
 {
-    
+    for (size_t i = 0; i < server_strings.size(); i++)
+    {
+        Server server_info;
+        parseServerInfo(server_strings[i], server_info);
+    }
+}
+
+/*
+    parse one server_block info string to Server instance
+
+    input : "server { ~ }"
+*/
+void parseServerInfo(std::string& content, Server& server_info)
+{
+    std::vector<std::string> tokens;
+
+    tokens = splitString(content += ' ', std::string(" \n\t"));
+    for (size_t i = 0; i < tokens.size(); i++)
+    {
+        if (tokens[i] == "listen" && i + 1 < tokens.size())
+        {
+            if (server_info.getServerPort() != "")
+                throw std::runtime_error("Error on parseServerInfo : duplicated port");
+        }
+    }
 }
 
 /*  
@@ -251,5 +278,3 @@ void preprocessFileContent(std::string &content)
     replaceTabsWithSpaces(content);
     removeDupAndMostSpacesAndNewlines(content);
 }
-
-void 

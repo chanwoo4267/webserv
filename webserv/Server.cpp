@@ -78,6 +78,16 @@ const std::string& Server::getServerReturn()
     return this->_server_return;
 }
 
+const std::string& Server::getServerHost()
+{
+    return this->_server_host;
+}
+
+const std::string& Server::getServerPort()
+{
+    return this->_server_port;
+}
+
 /* -------------------------------------------------- */
 /* -------------------set methods-------------------- */
 /* -------------------------------------------------- */
@@ -110,4 +120,14 @@ void Server::setServerReturn(std::string ret)
 void Server::setServerAutoindex(bool autoindex)
 {
     this->_server_autoindex = autoindex;
+}
+
+void Server::setServerHost(std::string host)
+{
+    this->_server_host = host;
+}
+
+void Server::setServerPort(std::string port)
+{
+    this->_server_port = port;
 }

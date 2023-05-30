@@ -5,5 +5,6 @@
 
 enum FileType getFileType(std::string const file_path);
 bool checkFilePermission(std::string const file_path, int mode);
+std::vector<std::string> splitString(std::string str, std::string delim);
 
 #endif

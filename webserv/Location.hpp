@@ -3,6 +3,19 @@
 
 # include "Webserv.hpp"
 
+/*
+    location subject rules
+
+    # config
+    1. define accepted method lists (allow_methods)
+    2. http redirection (return)
+    3. default search path (path)
+    4. directory listing (autoindex)
+    5. directory default file (index)
+    6. CGI extensions
+    7. direcotory for uploaded files (root)
+*/
+
 class Location
 {
     private:

@@ -24,3 +24,12 @@ const std::vector<Server>& Cluster::getClusterServers()
 {
     return this->_cluster_servers;
 }
+
+/* -------------------------------------------------- */
+/* -------------------get methods-------------------- */
+/* -------------------------------------------------- */
+
+void Cluster::setClusterServers(std::vector<Server> servers)
+{
+    this->_cluster_servers = servers;
+}

@@ -32,3 +32,30 @@ bool checkFilePermission(std::string const file_path, int mode)
     else
         return false;
 }
+
+/*
+    split string into tokens by given delim characters
+
+    find any matches of delim by find_first_of()
+    split string with substr(), push it, 
+    and move start point to first non-delim char by find_first_not_of()
+*/
+std::vector<std::string> splitString(std::string str, std::string delim)
+{
+    std::vector<std::string>	vec;
+	std::string::size_type		start, end;
+
+	start = end = 0;
+	while (1)
+	{
+		end = str.find_first_of(delim, start); // <string> 기본함수, start에서부터 delim 내용중 아무거나 일치하는 제일 첫번째 글자 위치를 반환
+		if (end == std::string::npos)
+			break;
+		std::string tmp = str.substr(start, end - start);
+		vec.push_back(tmp);
+		start = str.find_first_not_of(delim, end); // end 이후 delim가 아닌 첫 글자의 위치를 반환
+		if (start == std::string::npos)
+			break;
+	}
+	return (vec);
+}

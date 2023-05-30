@@ -17,6 +17,9 @@ class Cluster
 
         /* get methods */
         const std::vector<Server>& getClusterServers();
+
+        /* set methods */
+        void setClusterServers(std::vector<Server> servers);
 };
 
 #endif

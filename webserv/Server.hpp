@@ -4,6 +4,21 @@
 # include "Webserv.hpp"
 # include "Location.hpp"
 
+/*
+    server subject rules
+
+    # mandatory
+    1. client can upload files
+    2. At least feature GET, POST, DELETE methods
+    3. can listen to multiple port
+
+    # config
+    1. port, host, server_names
+    2. first host:port server is default (?)
+    3. default error pages
+    4. client_max_body_size
+*/
+
 class Server
 {
     private:
@@ -31,6 +46,8 @@ class Server
         const std::string& getServerRoot();
         const std::string& getServerIndex();
         const std::string& getServerReturn();
+        const std::string& getServerHost();
+        const std::string& getServerPort();
 
         /* set methods */
         void setServerClientMaxBodySize(size_t size);
@@ -39,6 +56,8 @@ class Server
         void setServerIndex(std::string index);
         void setServerReturn(std::string ret);
         void setServerAutoindex(bool autoindex);
+        void setServerHost(std::string host);
+        void setServerPort(std::string port);
 };
 
 #endif
