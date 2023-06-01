@@ -57,5 +57,20 @@ std::vector<std::string> splitString(std::string str, std::string delim)
 		if (start == std::string::npos)
 			break;
 	}
-	return (vec);
+	return vec;
+}
+
+/*
+    remove semicolon at the end of string
+
+    if there's no semicolon, return false
+    else, return true
+*/
+bool removeSemicolon(std::string &parametr)
+{
+	size_t pos = parametr.rfind(';');
+	if (pos != parametr.size() - 1)
+		return false;
+	parametr.erase(pos);
+    return true;
 }

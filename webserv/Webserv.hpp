@@ -36,14 +36,14 @@ enum MethodType
     GET,
     POST,
     DELETE,
-    NONE
+    INVALID,
 };
 
 enum FileType
 {
     REGULARFILE,
     DIRECTORY,
-    NONE
+    NONE,
 };
 
 #endif

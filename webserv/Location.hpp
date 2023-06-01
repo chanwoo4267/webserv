@@ -26,7 +26,8 @@ class Location
         std::string                         _location_return;
         bool                                _location_autoindex;
         std::vector<MethodType>             _location_allow_methods;
-        std::map<std::string, std::string>  _location_cgi_info;
+        std::string                         _location_cgi_path;
+        std::string                         _location_cgi_extension;
 
     public:
         Location();
@@ -42,7 +43,8 @@ class Location
         const std::string& getLocationReturn();
         const bool& getLocationAutoindex();
         const std::vector<MethodType>& getLocationAllowMethods();
-        const std::map<std::string, std::string>& getLocationCgiInfo();
+        const std::string& getLocationCgiPath();
+        const std::string& getLocationCgiExtension();
 
         /* set methods */
         void setLocationClientMaxBodySize(size_t size);
@@ -51,6 +53,9 @@ class Location
         void setLocationIndex(std::string index);
         void setLocationReturn(std::string ret);
         void setLocationAutoindex(bool autoindex);
+        void setLocationAllowMethods(std::vector<MethodType> methods);
+        void setLocationCgiPath(std::string cgi_path);
+        void setLocationCgiExtension(std::string cgi_extension);
 };
 
 #endif

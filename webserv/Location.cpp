@@ -20,7 +20,8 @@ Location::Location(const Location &obj)
     this->_location_index = obj._location_index;
     this->_location_autoindex = obj._location_autoindex;
     this->_location_allow_methods = obj._location_allow_methods;
-    this->_location_cgi_info = obj._location_cgi_info;
+    this->_location_cgi_path = obj._location_cgi_path;
+    this->_location_cgi_extension = obj._location_cgi_extension;
 }
 
 Location& Location::operator=(const Location &obj)
@@ -33,7 +34,8 @@ Location& Location::operator=(const Location &obj)
         this->_location_index = obj._location_index;
         this->_location_autoindex = obj._location_autoindex;
         this->_location_allow_methods = obj._location_allow_methods;
-        this->_location_cgi_info = obj._location_cgi_info;
+        this->_location_cgi_path = obj._location_cgi_path;
+        this->_location_cgi_extension = obj._location_cgi_extension;
     }
     return *this;
 }
@@ -77,9 +79,14 @@ const std::vector<MethodType>& Location::getLocationAllowMethods()
     return this->_location_allow_methods;
 }
 
-const std::map<std::string, std::string>& Location::getLocationCgiInfo()
+const std::string& Location::getLocationCgiPath()
 {
-    return this->_location_cgi_info;
+    return this->_location_cgi_path;
+}
+
+const std::string& Location::getLocationCgiExtension()
+{
+    return this->_location_cgi_extension;
 }
 
 /* -------------------------------------------------- */
@@ -114,4 +121,19 @@ void Location::setLocationReturn(std::string ret)
 void Location::setLocationAutoindex(bool autoindex)
 {
     this->_location_autoindex = autoindex;
+}
+
+void Location::setLocationAllowMethods(std::vector<MethodType> methods)
+{
+    this->_location_allow_methods = methods;
+}
+
+void Location::setLocationCgiPath(std::string cgi_path)
+{
+    this->_location_cgi_path = cgi_path;
+}
+
+void Location::setLocationCgiExtension(std::string cgi_extension)
+{
+    this->_location_cgi_extension = cgi_extension;
 }

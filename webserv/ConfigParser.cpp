@@ -5,6 +5,23 @@
 /* -------------------------------------------------- */
 
 /*
+    input string, convert it to correspond method type
+
+    if not GET, POST, DELETE then return INVALID
+*/
+static MethodType checkMethodType(std::string method)
+{
+    if (method == "GET")
+        return GET;
+    else if (method == "POST")
+        return POST;
+    else if (method == "DELETE")
+        return DELETE;
+    else
+        return INVALID;
+}
+
+/*
     search "server {" and return position of '{'
 
     if the first letter is not 's'
@@ -219,7 +236,119 @@ void parseStringToServers(std::vector<std::string>& server_strings, std::vector<
     for (size_t i = 0; i < server_strings.size(); i++)
     {
         Server server_info;
-        parseServerInfo(server_strings[i], server_info);
+        parseServerBlock(server_strings[i], server_info);
+    }
+}
+
+/*
+    parse error_pages info and push to Server
+
+    input : "server { ~ }", current index : "error_page"
+*/
+void parseErrorPages(std::vector<std::string>& tokens, Server& server_info, size_t& i)
+{
+
+}
+
+/*
+    parse one location_block info and push to Server
+
+    input : "server { ~ }", current index : "location"
+    last_idx directs to the last token, "}"
+*/
+void parseLocationBlock(std::vector<std::string>& tokens, Server& server_info, size_t& i)
+{
+    Location    loc;
+    bool        autoindex_flag = false;
+    bool        end_flag;
+    size_t      last_idx = ++i;
+
+    if (getFileType(tokens[++i]) != DIRECTORY)
+        throw std::runtime_error("Error on parseLocationBlock : not a directory");
+    loc.setLocationPath(tokens[i]);
+
+    while (tokens[last_idx] != "}")
+        last_idx++;
+
+    while (++i < last_idx)
+    {
+        if (tokens[i] == "root" && i + 1 < last_idx)
+        {
+            if (loc.getLocationRoot() != "")
+                throw std::runtime_error("Error on parseLocationBlock : duplicated root");
+            if (removeSemicolon(tokens[++i]) == false)
+                throw std::runtime_error("Error on parseLocationBlock : no ';' in root");
+            loc.setLocationRoot(tokens[i]);
+        }
+        else if (tokens[i] == "path" && i + 1 < last_idx)
+        {
+            if (loc.getLocationPath() != "")
+                throw std::runtime_error("Error on parseLocationBlock : duplicated path");
+            if (removeSemicolon(tokens[++i]) == false)
+                throw std::runtime_error("Error on parseLocationBlock : no ';' in path");
+            loc.setLocationPath(tokens[i]);
+        }
+        else if (tokens[i] == "index" && i + 1 < last_idx)
+        {
+            if (loc.getLocationIndex() != "")
+                throw std::runtime_error("Error on parseLocationBlock : duplicated index");
+            if (removeSemicolon(tokens[++i]) == false)
+                throw std::runtime_error("Error on parseLocationBlock : no ';' in index");
+            loc.setLocationIndex(tokens[i]);
+        }
+        else if (tokens[i] == "return" && i + 1 < last_idx)
+        {
+            if (loc.getLocationReturn() != "")
+                throw std::runtime_error("Error on parseLocationBlock : duplicated return");
+            if (removeSemicolon(tokens[++i]) == false)
+                throw std::runtime_error("Error on parseLocationBlock : no ';' in return");
+            loc.setLocationReturn(tokens[i]);
+        }
+        else if (tokens[i] == "client_max_body_size" && i + 1 < last_idx)
+        {
+            if (loc.getLocationClientMaxBodySize() != 0)
+                throw std::runtime_error("Error on parseLocationBlock : duplicated client_max_body_size");
+            if (removeSemicolon(tokens[++i]) == false)
+                throw std::runtime_error("Error on parseLocationBlock : no ';' in client_max_body_size");
+            loc.setLocationClientMaxBodySize(strtoul(tokens[i].c_str(), NULL, 10));
+        }
+        else if (tokens[i] == "autoindex" && i + 1 < last_idx)
+        {
+            if (autoindex_flag)
+                throw std::runtime_error("Error on parseLocationBlock : duplicated autoindex");
+            if (removeSemicolon(tokens[++i]) == false)
+                throw std::runtime_error("Error on parseLocationBlock : no ';' in autoindex");
+            if (tokens[i] == "on" || tokens[i] == "off")
+                loc.setLocationAutoindex((tokens[i] == "on" ? true : false));
+            else
+                throw std::runtime_error("Error on parseLocationBlock : invalid value for autoindex");
+            autoindex_flag = true;
+        }
+        else if (tokens[i] == "allow_methods" && i + 1 < last_idx)
+        {
+            if (loc.getLocationAllowMethods().empty() != true)
+                throw std::runtime_error("Error on parseLocationBlock : duplicated allow_methods");
+
+            std::vector<MethodType> method_vec;
+            while (++i < last_idx)
+            {
+                end_flag = removeSemicolon(tokens[i]);
+                method_vec.push_back(checkMethodType(tokens[i]));
+                if (end_flag)
+                    break;
+            }
+            loc.setLocationAllowMethods(method_vec);
+            method_vec.clear();
+        }
+        else if (tokens[i] == "cgi_info" && i + 1 < last_idx)
+        {
+            if (loc.getLocationCgiInfo().empty() != true)
+                throw std::runtime_error("Error on parseLocationBlock : duplicated cgi_info");
+            
+            std::map<std::string, std::string>  cgi_vec;                   
+        }
+        else
+            throw std::runtime_error("Error on parseLocationBlock : invalid token");
     }
 }
 
@@ -228,17 +357,98 @@ void parseStringToServers(std::vector<std::string>& server_strings, std::vector<
 
     input : "server { ~ }"
 */
-void parseServerInfo(std::string& content, Server& server_info)
+void parseServerBlock(std::string& content, Server& server_info)
 {
-    std::vector<std::string> tokens;
+    std::vector<std::string>    tokens;
+    bool                        autoindex_flag = false;
 
     tokens = splitString(content += ' ', std::string(" \n\t"));
+
     for (size_t i = 0; i < tokens.size(); i++)
     {
         if (tokens[i] == "listen" && i + 1 < tokens.size())
         {
             if (server_info.getServerPort() != "")
-                throw std::runtime_error("Error on parseServerInfo : duplicated port");
+                throw std::runtime_error("Error on parseServerBlock : duplicated port");
+            if (removeSemicolon(tokens[++i]) == false)
+                throw std::runtime_error("Error on parseServerBlock : no ';' in port");
+            /* if listen 0.0.0.0:8002 */
+            size_t pos = tokens[i].find(':');
+            if (pos == std::string::npos)
+                server_info.setServerPort(tokens[i]);
+            else
+            {
+                server_info.setServerHost(tokens[i].substr(0, pos));
+                server_info.setServerPort(tokens[i].substr(pos + 1));
+            }
+        }
+        else if (tokens[i] == "client_max_body_size" && i + 1 < tokens.size())
+        {
+            if (server_info.getServerClientMaxBodySize() != 0)
+                throw std::runtime_error("Error on parseServerBlock : duplicated client_max_body_size");
+            if (removeSemicolon(tokens[++i]) == false)
+                throw std::runtime_error("Error on parseServerBlock : no ';' in client_max_body_size");
+            server_info.setServerClientMaxBodySize(strtoul(tokens[i].c_str(), NULL, 10));
+        }
+        else if (tokens[i] == "server_name" && i + 1 < tokens.size())
+        {
+            if (server_info.getServerName() != "")
+                throw std::runtime_error("Error on parseServerBlock : duplicated server_name");
+            if (removeSemicolon(tokens[++i]) == false)
+                throw std::runtime_error("Erro on parseServerBlock : no ';' in server_name");
+            server_info.setServerName(tokens[i]);
+        }
+        else if (tokens[i] == "root" && i + 1 < tokens.size())
+        {
+            if (server_info.getServerRoot() != "")
+                throw std::runtime_error("Error on parseServerBlock : duplicated root");
+            if (removeSemicolon(tokens[++i]) == false)
+                throw std::runtime_error("Erro on parseServerBlock : no ';' in root");
+            server_info.setServerRoot(tokens[i]);
+        }
+        else if (tokens[i] == "index" && i + 1 < tokens.size())
+        {
+            if (server_info.getServerIndex() != "")
+                throw std::runtime_error("Error on parseServerBlock : duplicated index");
+            if (removeSemicolon(tokens[++i]) == false)
+                throw std::runtime_error("Erro on parseServerBlock : no ';' in index");
+            server_info.setServerIndex(tokens[i]);
+        }
+        else if (tokens[i] == "return" && i + 1 < tokens.size())
+        {
+            if (server_info.getServerReturn() != "")
+                throw std::runtime_error("Error on parseServerBlock : duplicated return");
+            if (removeSemicolon(tokens[++i]) == false)
+                throw std::runtime_error("Erro on parseServerBlock : no ';' in return");
+            server_info.setServerReturn(tokens[i]);
+        }
+        else if (tokens[i] == "autoindex" && i + 1 < tokens.size())
+        {
+            if (autoindex_flag)
+                throw std::runtime_error("Error on parseServerBlock : duplicated autoindex");
+            if (removeSemicolon(tokens[++i]) == false)
+                throw std::runtime_error("Error on parseServerBlock : no ';' in autoindex");
+            if (tokens[i] == "on" || tokens[i] == "off")
+                server_info.setServerAutoindex((tokens[i] == "on" ? true : false));
+            else
+                throw std::runtime_error("Error on parseServerBlock : invalid value for autoindex");
+            autoindex_flag = true;
+        }
+        else if (tokens[i] == "host" && i + 1 < tokens.size())
+        {
+            if (server_info.getServerHost() != "")
+                throw std::runtime_error("Error on parseServerBlock : duplicated host");
+            if (removeSemicolon(tokens[++i]) == false)
+                throw std::runtime_error("Erro on parseServerBlock : no ';' in host");
+            server_info.setServerHost(tokens[i]);
+        }
+        else if (tokens[i] == "location" && i + 1 < tokens.size())
+        {
+            parseLocationBlock(tokens, server_info, i);
+        }
+        else if (tokens[i] == "error_page" && i + 1 < tokens.size())
+        {
+            parseErrorPages(tokens, server_info, i);
         }
     }
 }
