@@ -1,7 +1,7 @@
 #include "Utility.hpp"
 
 /* 
-    get file type(REGULARFILE, DIRECTORY, NONE) 
+    get file type (REGULARFILE, DIRECTORY, NONE) 
 */
 enum FileType getFileType(std::string const file_path)
 {
@@ -19,7 +19,7 @@ enum FileType getFileType(std::string const file_path)
             return NONE;
     }
     else
-        throw std::runtime_error("Error on getFileType() : stat function failed");
+        return NONE;
 }
 
 /* 
@@ -73,4 +73,53 @@ bool removeSemicolon(std::string &parametr)
 		return false;
 	parametr.erase(pos);
     return true;
+}
+
+/*
+    convert string to short
+
+    first convert to int by ft_stoi, then check bound
+    if out of bound throw error
+*/
+short ft_stos(std::string str)
+{
+    int temp = ft_stoi(str);
+
+    if (temp >= std::numeric_limits<short>::max() + 1.0)
+        throw std::runtime_error("Error on ft_stos : out of bound");
+    else if (temp <= std::numeric_limits<short>::min() - 1.0)
+        throw std::runtime_error("Error on ft_stos : out of bound");
+    
+    return static_cast<short>(temp);
+}
+
+/*
+    convert string to int
+
+    check bound for int, and if out of bound throw error
+*/
+int ft_stoi(std::string input)
+{
+    long result = 0;
+    int sign = 1;
+    std::string::const_iterator it = input.begin();
+    if (*it == '-') 
+    {
+        sign = -1;
+        ++it;
+    }
+    for (; it != input.end(); ++it) 
+    {
+        if (isdigit(*it)) 
+        {
+            result = result * 10 + (*it - '0');
+            if (sign == 1 && result >= std::numeric_limits<int>::max() + 1.0)
+                throw std::runtime_error("Error on ft_stoi : out of bound");
+            else if (sign == -1 && result >= std::numeric_limits<int>::max() + 1.0)
+                throw std::runtime_error("Error on ft_stoi : out of bound");
+        } 
+        else 
+            break;
+    }
+    return result * sign;
 }

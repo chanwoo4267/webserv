@@ -24,6 +24,7 @@ class Location
         std::string                         _location_root;
         std::string                         _location_index;
         std::string                         _location_return;
+        int                                 _location_return_status;
         bool                                _location_autoindex;
         std::vector<MethodType>             _location_allow_methods;
         std::string                         _location_cgi_path;
@@ -41,6 +42,7 @@ class Location
         const std::string& getLocationRoot();
         const std::string& getLocationIndex();
         const std::string& getLocationReturn();
+        const int& getLocationReturnStatus();
         const bool& getLocationAutoindex();
         const std::vector<MethodType>& getLocationAllowMethods();
         const std::string& getLocationCgiPath();
@@ -52,10 +54,13 @@ class Location
         void setLocationRoot(std::string root);
         void setLocationIndex(std::string index);
         void setLocationReturn(std::string ret);
+        void setLocationReturnStatus(int status);
         void setLocationAutoindex(bool autoindex);
         void setLocationAllowMethods(std::vector<MethodType> methods);
         void setLocationCgiPath(std::string cgi_path);
         void setLocationCgiExtension(std::string cgi_extension);
+
+        void printLocation();
 };
 
 #endif

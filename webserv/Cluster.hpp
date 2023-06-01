@@ -20,6 +20,8 @@ class Cluster
 
         /* set methods */
         void setClusterServers(std::vector<Server> servers);
+
+        void printCluster();
 };
 
 #endif

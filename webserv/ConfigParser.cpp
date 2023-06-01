@@ -208,7 +208,7 @@ void parseConfigFile(std::string& config_file_path, Cluster& cluster)
     std::vector<std::string> server_strings;
     std::string content;
 
-    if (getFileType(config_file_path) != 1)
+    if (getFileType(config_file_path) != REGULARFILE)
         throw std::runtime_error("Error on parseConfigFileToCluster() : not a regular file");
     if (checkFilePermission(config_file_path, R_OK) == false)
         throw std::runtime_error("Error on parseConfigFileToCluster() : no permission to file_read");
@@ -223,6 +223,7 @@ void parseConfigFile(std::string& config_file_path, Cluster& cluster)
     preprocessFileContent(content);
     splitContentByServers(content, server_strings);
     parseStringToServers(server_strings, server_vector);
+
     cluster.setClusterServers(server_vector);
 }
 
@@ -237,6 +238,7 @@ void parseStringToServers(std::vector<std::string>& server_strings, std::vector<
     {
         Server server_info;
         parseServerBlock(server_strings[i], server_info);
+        server_vector.push_back(server_info);
     }
 }
 
@@ -247,7 +249,23 @@ void parseStringToServers(std::vector<std::string>& server_strings, std::vector<
 */
 void parseErrorPages(std::vector<std::string>& tokens, Server& server_info, size_t& i)
 {
+    std::vector<short>  vec;
+    size_t              size = tokens.size();
 
+    while (++i < size)
+    {
+        removeSemicolon(tokens[i]);
+        if (getFileType(tokens[i]) == REGULARFILE)
+        {
+            for(size_t t = 0; t < vec.size(); t++)
+                server_info.pushServerErrorPage(vec[t], tokens[i]);
+            break;
+        }
+        else
+        {
+            vec.push_back(ft_stos(tokens[i]));
+        }
+    }
 }
 
 /*
@@ -261,11 +279,11 @@ void parseLocationBlock(std::vector<std::string>& tokens, Server& server_info, s
     Location    loc;
     bool        autoindex_flag = false;
     bool        end_flag;
-    size_t      last_idx = ++i;
+    size_t      last_idx = i + 1; // last_idx는 directory 가리키는중
 
     if (getFileType(tokens[++i]) != DIRECTORY)
         throw std::runtime_error("Error on parseLocationBlock : not a directory");
-    loc.setLocationPath(tokens[i]);
+    loc.setLocationPath(tokens[i++]);
 
     while (tokens[last_idx] != "}")
         last_idx++;
@@ -296,10 +314,11 @@ void parseLocationBlock(std::vector<std::string>& tokens, Server& server_info, s
                 throw std::runtime_error("Error on parseLocationBlock : no ';' in index");
             loc.setLocationIndex(tokens[i]);
         }
-        else if (tokens[i] == "return" && i + 1 < last_idx)
+        else if (tokens[i] == "return" && i + 2 < last_idx)
         {
             if (loc.getLocationReturn() != "")
                 throw std::runtime_error("Error on parseLocationBlock : duplicated return");
+            loc.setLocationReturnStatus(ft_stoi(tokens[++i]));
             if (removeSemicolon(tokens[++i]) == false)
                 throw std::runtime_error("Error on parseLocationBlock : no ';' in return");
             loc.setLocationReturn(tokens[i]);
@@ -324,7 +343,7 @@ void parseLocationBlock(std::vector<std::string>& tokens, Server& server_info, s
                 throw std::runtime_error("Error on parseLocationBlock : invalid value for autoindex");
             autoindex_flag = true;
         }
-        else if (tokens[i] == "allow_methods" && i + 1 < last_idx)
+        else if (tokens[i] == "allow_methods")
         {
             if (loc.getLocationAllowMethods().empty() != true)
                 throw std::runtime_error("Error on parseLocationBlock : duplicated allow_methods");
@@ -340,16 +359,19 @@ void parseLocationBlock(std::vector<std::string>& tokens, Server& server_info, s
             loc.setLocationAllowMethods(method_vec);
             method_vec.clear();
         }
-        else if (tokens[i] == "cgi_info" && i + 1 < last_idx)
-        {
-            if (loc.getLocationCgiInfo().empty() != true)
+        else if (tokens[i] == "cgi_info" && i + 2 < last_idx)
+        {  
+            if (loc.getLocationCgiPath() != "" || loc.getLocationCgiExtension() != "")
                 throw std::runtime_error("Error on parseLocationBlock : duplicated cgi_info");
-            
-            std::map<std::string, std::string>  cgi_vec;                   
+            loc.setLocationCgiExtension(tokens[++i]);
+            if (removeSemicolon(tokens[++i]) == false)
+                throw std::runtime_error("Error on parseLocationBlock : no ';' in cgi_path");
+            loc.setLocationCgiPath(tokens[i]);
         }
         else
-            throw std::runtime_error("Error on parseLocationBlock : invalid token");
-    }
+            throw std::runtime_error("Error on parseLocationBlock : invalid token : " + tokens[i]);
+    }        
+    server_info.pushServerLocation(loc);
 }
 
 /*
@@ -361,10 +383,13 @@ void parseServerBlock(std::string& content, Server& server_info)
 {
     std::vector<std::string>    tokens;
     bool                        autoindex_flag = false;
+    size_t                      i = 0;
 
     tokens = splitString(content += ' ', std::string(" \n\t"));
-
-    for (size_t i = 0; i < tokens.size(); i++)
+    if (tokens[i] != "{")
+        throw std::runtime_error("Error on parseServerBlock: no server block");
+    i += 1;
+    for (; i < tokens.size(); i++)
     {
         if (tokens[i] == "listen" && i + 1 < tokens.size())
         {
@@ -414,10 +439,11 @@ void parseServerBlock(std::string& content, Server& server_info)
                 throw std::runtime_error("Erro on parseServerBlock : no ';' in index");
             server_info.setServerIndex(tokens[i]);
         }
-        else if (tokens[i] == "return" && i + 1 < tokens.size())
+        else if (tokens[i] == "return" && i + 2 < tokens.size())
         {
             if (server_info.getServerReturn() != "")
                 throw std::runtime_error("Error on parseServerBlock : duplicated return");
+            server_info.setServerReturnStatus(ft_stoi(tokens[++i]));
             if (removeSemicolon(tokens[++i]) == false)
                 throw std::runtime_error("Erro on parseServerBlock : no ';' in return");
             server_info.setServerReturn(tokens[i]);
@@ -450,6 +476,10 @@ void parseServerBlock(std::string& content, Server& server_info)
         {
             parseErrorPages(tokens, server_info, i);
         }
+        else if (tokens[i] == "}")
+            continue;
+        else
+            throw std::runtime_error("Error on parseServerBlock : invalid token " + tokens[i]);
     }
 }
 

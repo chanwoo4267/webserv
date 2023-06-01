@@ -33,3 +33,17 @@ void Cluster::setClusterServers(std::vector<Server> servers)
 {
     this->_cluster_servers = servers;
 }
+
+/* -------------------------------------------------- */
+/* ------------------other methods------------------- */
+/* -------------------------------------------------- */
+
+void Cluster::printCluster()
+{
+    std::vector<Server>::iterator it;
+
+    for (it = _cluster_servers.begin(); it != _cluster_servers.end(); it++)
+    {
+        it->printServer();
+    }
+}

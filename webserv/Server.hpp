@@ -27,6 +27,7 @@ class Server
         std::string                     _server_root;
         std::string                     _server_index;
         std::string                     _server_return;
+        int                             _server_return_status;
         std::map<short, std::string>    _server_error_pages;
         std::vector<Location>           _server_locations;
         bool                            _server_autoindex;
@@ -46,6 +47,7 @@ class Server
         const std::string& getServerRoot();
         const std::string& getServerIndex();
         const std::string& getServerReturn();
+        const int& getServerReturnStatus();
         const std::string& getServerHost();
         const std::string& getServerPort();
 
@@ -55,9 +57,15 @@ class Server
         void setServerRoot(std::string root);
         void setServerIndex(std::string index);
         void setServerReturn(std::string ret);
+        void setServerReturnStatus(int status);
         void setServerAutoindex(bool autoindex);
         void setServerHost(std::string host);
         void setServerPort(std::string port);
+
+        void pushServerLocation(Location loc);
+        void pushServerErrorPage(short error_code, std::string error_path);
+
+        void printServer();
 };
 
 #endif

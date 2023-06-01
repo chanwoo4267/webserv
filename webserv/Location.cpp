@@ -8,6 +8,9 @@ Location::Location()
     this->_location_index = "";
     this->_location_return = "";
     this->_location_autoindex = false;
+    this->_location_cgi_extension = "";
+    this->_location_cgi_path = "";
+    this->_location_return_status = 0;
 }
 
 Location::~Location() {}
@@ -22,6 +25,8 @@ Location::Location(const Location &obj)
     this->_location_allow_methods = obj._location_allow_methods;
     this->_location_cgi_path = obj._location_cgi_path;
     this->_location_cgi_extension = obj._location_cgi_extension;
+    this->_location_return = obj._location_return;
+    this->_location_return_status = obj._location_return_status;
 }
 
 Location& Location::operator=(const Location &obj)
@@ -36,6 +41,8 @@ Location& Location::operator=(const Location &obj)
         this->_location_allow_methods = obj._location_allow_methods;
         this->_location_cgi_path = obj._location_cgi_path;
         this->_location_cgi_extension = obj._location_cgi_extension;
+        this->_location_return = obj._location_return;
+        this->_location_return_status = obj._location_return_status;
     }
     return *this;
 }
@@ -67,6 +74,11 @@ const std::string& Location::getLocationIndex()
 const std::string& Location::getLocationReturn()
 {
     return this->_location_return;
+}
+
+const int& Location::getLocationReturnStatus()
+{
+    return this->_location_return_status;
 }
 
 const bool& Location::getLocationAutoindex()
@@ -118,6 +130,11 @@ void Location::setLocationReturn(std::string ret)
     this->_location_return = ret;
 }
 
+void Location::setLocationReturnStatus(int status)
+{
+    this->_location_return_status = status;
+}
+
 void Location::setLocationAutoindex(bool autoindex)
 {
     this->_location_autoindex = autoindex;
@@ -136,4 +153,22 @@ void Location::setLocationCgiPath(std::string cgi_path)
 void Location::setLocationCgiExtension(std::string cgi_extension)
 {
     this->_location_cgi_extension = cgi_extension;
+}
+
+void Location::printLocation()
+{
+    std::cout << "******************" << std::endl;
+    std::cout << "client_max_body_size = " << _location_client_max_body_size << std::endl;
+    std::cout << "path = " << _location_path << std::endl;
+    std::cout << "root = " << _location_root << std::endl;
+    std::cout << "index = " << _location_index << std::endl;
+    std::cout << "return = " << _location_return_status << " " << _location_return << std::endl;
+    std::cout << "autoindex = " << _location_autoindex << std::endl;
+    std::cout << "cgi_path = " << _location_cgi_path << std::endl;
+    std::cout << "cgi_extension = " << _location_cgi_extension << std::endl;
+    std::cout << "allow_methods = " << std::endl;
+    for (std::vector<MethodType>::iterator it = _location_allow_methods.begin(); it != _location_allow_methods.end(); it++)
+        std::cout << *it << " ";
+    std::cout << std::endl;
+    std::cout << "******************" << std::endl;
 }
