@@ -29,6 +29,7 @@ Server::Server(const Server& obj)
     this->_server_listen_socket = obj._server_listen_socket;
     this->_server_host = obj._server_host;
     this->_server_port = obj._server_port;
+    this->_server_return_status = obj._server_return_status;
 }
 
 Server& Server::operator=(const Server& obj)
@@ -46,6 +47,7 @@ Server& Server::operator=(const Server& obj)
         this->_server_listen_socket = obj._server_listen_socket;
         this->_server_host = obj._server_host;
         this->_server_port = obj._server_port;
+        this->_server_return_status = obj._server_return_status;
     }
     return *this;
 }
