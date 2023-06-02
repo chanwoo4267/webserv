@@ -1,0 +1,106 @@
+### 예외처리 리스트
+
+# config file
+
+* 주어진 인자가 잘못된 경로 혹은 열지 못하는 파일 O
+* 연 파일이 비어있거나 server 블록이 존재하지 않음 O
+
+# config file content
+
+* server { ... } server { ... } 구조로 되어있음 O
+
+# server block
+
+* listen ~ 문의 중복 O
+* listen ~ 문의 뒤 인자에 세미콜론 여부 O
+* listen host:port; 구조로 들어오는 경우 O
+* port의 유효 여부 (숫자) X
+
+* client_max_body_size ~ 문의 중복 O
+* client_max_body_size ~ 문의 뒤 인자 세미콜론 여부 O
+* client_max_body_size ~ 문의 유효 값 여부 (숫자) O
+* client_max_body_size 의 오버플로우 여부(ULONG_MAX) X
+
+* server_name ~ 문의 중복 O
+* server_name ~ 문의 뒤 인자 세미콜론 여부 O
+
+* root ~ 문의 중복 O
+* root ~ 문의 세미콜론 여부 O
+* root 값의 실제 존재 여부 X
+* root 값이 디렉토리인지 여부 X
+* root 값의 디렉토리 엑세스 권한 여부 X
+
+* index ~ 문의 중복 O
+* index ~ 문의 세미콜론 여부 O
+* index 값의 실제 존재 여부 X
+* index 값이 파일인지 여부 X
+* index 값의 파일 엑세스 권한 여부 X
+
+* return 문의 중복 O
+* return 코드 URI 순으로 이뤄졌는지 여부 O
+* return 문의 세미콜론 여부 O
+* return 문의 코드가 숫자인지 여부 O
+* return 문의 코드 값이 유효한지 (200~ 600 사이) X
+* return 문의 URI 값이 유효한 URI인지 X
+
+* autoindex 중복 O
+* autoindex 세미콜론 여부 O
+* autoindex 값의 유효 여부 (on, off) O
+
+* host 값 중복 O
+* host 값의 세미콜론 여부 O
+* host 값이 유효한 IP인지 여부 X
+* host 값이 0.0.0.0 혹은 localhost일 경우 127.0.0.1로 변경 X
+
+* 이외에 다른 값이 들어올경우 예외처리 O
+
+# loction block
+
+* root 값 중복 O
+* root 값 세미콜론 O
+* root 값의 실제 존재 여부 X
+* root 값이 디렉토리인지 여부 X
+* root 값의 디렉토리 엑세스 권한 여부 X
+
+* path 값이 디렉토리인지 확인 O
+* path 값이 accessible한지 확인 X
+
+* index 중복 O
+* index 세미콜론 O
+* index 값의 실제 존재 여부 X
+* index 값이 파일인지 여부 X
+* index 값의 파일 엑세스 권한 여부 X
+
+* return 문의 중복 O
+* return 문의 세미콜론 O
+* return문이 코드 URI 순으로 이루어졌는지 여부 O
+* return 문의 코드가 숫자인지 여부 O
+* return 문의 코드 값이 유효한지 (200~ 600 사이) X
+* return 문의 URI 값이 유효한 URI인지 X
+
+* client_max_body_size ~ 문의 중복 O
+* client_max_body_size ~ 문의 뒤 인자 세미콜론 여부 O
+* client_max_body_size ~ 문의 유효 값 여부 (숫자) O
+* client_max_body_size 의 오버플로우 여부(ULONG_MAX) X
+
+* autoindex 중복 O
+* autoindex 세미콜론 여부 O
+* autoindex 값의 유효 여부 (on, off) O
+
+* allow_methods의 중복 O
+* 세미콜론이 나올때까지 Methods값을 그대로 push_back O
+* 제대로 된 Method인지 아닌지 확인 X (INVALID로 그대로 들어갔음, 나중에 확인 후 예외처리)
+
+* cgi_info 중복 O
+* 올바른 extension인지 X
+* 세미콜론 여부 O
+* 올바른 path인지 X
+
+* 이외의 다른 값이 들어올경우 예외처리 O
+
+# error_page
+
+* 들어오는 값에 세미콜론이 있다면, REGULAR FILE인지 확인 O
+* REGULAR FILE이지만 accessible한지 X
+* 들어오는 값에 세미콜론이 없다면, 숫자로 이루어졌는지 확인 O
+* 들어오는 값 중 스테이터스 코드가 valid한 범위인지 (200~600) X

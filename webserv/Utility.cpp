@@ -76,6 +76,19 @@ bool removeSemicolon(std::string &parametr)
 }
 
 /*
+    check whether given string is decimal number, or not
+
+    if each character is non-digit, not '-' and '+' then return false
+*/
+bool ft_isnum(std::string str)
+{
+    for (size_t i = 0; i < str.length(); i++)
+        if (!isdigit(str[i]) && str[i] != '-' && str[i] != '+')
+            return false;
+    return true;
+}
+
+/*
     convert string to short
 
     first convert to int by ft_stoi, then check bound
