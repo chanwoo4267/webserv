@@ -5,23 +5,6 @@
 /* -------------------------------------------------- */
 
 /*
-    input string, convert it to correspond method type
-
-    if not GET, POST, DELETE then return INVALID
-*/
-static MethodType checkMethodType(std::string method)
-{
-    if (method == "GET")
-        return GET;
-    else if (method == "POST")
-        return POST;
-    else if (method == "DELETE")
-        return DELETE;
-    else
-        return INVALID;
-}
-
-/*
     search "server {" and return position of '{'
 
     if the first letter is not 's'

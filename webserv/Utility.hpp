@@ -9,6 +9,7 @@ std::vector<std::string> splitString(std::string str, std::string delim);
 short ft_stos(std::string str);
 int ft_stoi(std::string str);
 bool ft_isnum(std::string str);
+MethodType checkMethodType(std::string method);
 
 /* function that changes param */
 bool removeSemicolon(std::string &parametr);
