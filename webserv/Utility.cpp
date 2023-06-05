@@ -128,7 +128,7 @@ int ft_stoi(std::string input)
             result = result * 10 + (*it - '0');
             if (sign == 1 && result >= std::numeric_limits<int>::max() + 1.0)
                 throw std::runtime_error("Error on ft_stoi : out of bound");
-            else if (sign == -1 && result >= std::numeric_limits<int>::max() + 1.0)
+            else if (sign == -1 && result >= std::numeric_limits<int>::max() + 2.0)
                 throw std::runtime_error("Error on ft_stoi : out of bound");
         } 
         else 

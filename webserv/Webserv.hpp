@@ -22,6 +22,7 @@
 # include <sys/stat.h>
 # include <netinet/in.h>
 # include <arpa/inet.h>
+# include <cerrno>
 
 /* colors */
 # define RED "\e[0;31m"

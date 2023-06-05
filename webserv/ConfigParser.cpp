@@ -195,12 +195,89 @@ static void removeDupAndMostSpacesAndNewlines(std::string& str)
 
 static void checkServerBlockError(Server& server_info)
 {
+    int             t_int;
+    unsigned long   t_ul;
+    std::string     t_str;
+    short           count = 0;
 
+    try
+    {
+        t_int = ft_stoi(server_info.getServerPort());
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << std::endl;
+        throw std::runtime_error("Error on checkServerBlockError : invalid port value");
+    }
+    if (t_int == 80 || t_int == 443 || t_int == 22 || t_int == 25 || t_int < 1 || t_int > 65535)
+        throw std::runtime_error("Error on checkServerBlockError : invalid port value");
+    
+    // !check! : whether we can detect overflow
+    t_ul = server_info.getServerClientMaxBodySize();
+    if (t_ul <= 0 || t_ul >= ULONG_MAX && errno == ERANGE)
+        throw std::runtime_error("Error on checkServerBlockError : invalid client_max_body_size");
+    
+    t_str = server_info.getServerRoot();
+    if (getFileType(t_str) != DIRECTORY || checkFilePermission(t_str, R_OK) == false)
+        throw std::runtime_error("Error on checkServerBlockError : invalid root");
+    
+    t_str = server_info.getServerIndex();
+    if (getFileType(t_str) != REGULARFILE || checkFilePermission(t_str, R_OK) == false)
+        throw std::runtime_error("Error on checkServerBlockError : invalid index");
+
+    t_int = server_info.getServerReturnStatus();
+    if (t_int < 200 || t_int >= 600)
+        throw std::runtime_error("Error on checkServerBlockError : invalid return_status");
+    
+    t_str = server_info.getServerHost();
+    if (t_str == "0.0.0.0")
+        server_info.setServerHost("127.0.0.1");
+
+    for (size_t i = 0; i < t_str.length(); i++)
+        if (t_str[i] == '.')
+            count++;
+    if (count != 3 || inet_addr(t_str.c_str()) == INADDR_NONE)
+        throw std::runtime_error("Error on checkServerBlockError : invalid host IP");
 }
 
 static void checkLocationBlockError(Location& loc_info)
 {
+    int             t_int;
+    unsigned long   t_ul;
+    std::string     t_str;
 
+    t_str = loc_info.getLocationRoot();
+    if (getFileType(t_str) != DIRECTORY || checkFilePermission(t_str, R_OK) == false)
+        throw std::runtime_error("Error on checkLocationBlockError : invalid root");
+    
+    t_str = loc_info.getLocationPath();
+    if (getFileType(t_str) != DIRECTORY || checkFilePermission(t_str, R_OK) == false)
+        throw std::runtime_error("Error on checkLocationBlockError : invalid path");
+    
+    t_str = loc_info.getLocationIndex();
+    if (getFileType(t_str) != REGULARFILE || checkFilePermission(t_str, R_OK) == false)
+        throw std::runtime_error("Error on checkLocationBlockError : invalid index");
+    
+    t_int = loc_info.getLocationReturnStatus();
+    if (t_int < 200 || t_int >= 600)
+        throw std::runtime_error("Error on checkLocationBlockError : invalid return_status");
+
+    // !check! : whether we can detect overflow
+    t_ul = loc_info.getLocationClientMaxBodySize();
+    if (t_ul <= 0 || t_ul >= ULONG_MAX && errno == ERANGE)
+        throw std::runtime_error("Error on checkServerBlockError : invalid client_max_body_size");
+    
+    std::vector<MethodType> vec = loc_info.getLocationAllowMethods();
+    for (size_t i = 0; i < vec.size(); i++)
+        if (vec[i] == INVALID)
+            throw std::runtime_error("Error on checkServerBlockError : invalid allow_method");
+    
+    t_str = loc_info.getLocationCgiPath();
+    if (getFileType(t_str) != REGULARFILE || checkFilePermission(t_str, R_OK) == false)
+        throw std::runtime_error("Error on checkLocationBlockError : invalid cgi_path");
+    t_str = loc_info.getLocationCgiExtension();
+    if (t_str.empty() == true || t_str[0] != '.')
+        throw std::runtime_error("Error on checkLocationBlockError : invalid cgi_extension");
 }
 
 /* -------------------------------------------------- */
@@ -264,6 +341,7 @@ void parseErrorPages(std::vector<std::string>& tokens, Server& server_info, size
 {
     std::vector<short>  vec;
     size_t              size = tokens.size();
+    short               error_code;
 
     while (++i < size)
     {
@@ -271,6 +349,8 @@ void parseErrorPages(std::vector<std::string>& tokens, Server& server_info, size
         {
             if (getFileType(tokens[i]) != REGULARFILE)
                 throw std::runtime_error("Error on parseErrorPages : not a regular file with ';'");
+            if (checkFilePermission(tokens[i], R_OK) == false)
+                throw std::runtime_error("Error on parseErrorPages : not accessible file");
             for(size_t t = 0; t < vec.size(); t++)
                 server_info.pushServerErrorPage(vec[t], tokens[i]);
             break;
@@ -279,6 +359,17 @@ void parseErrorPages(std::vector<std::string>& tokens, Server& server_info, size
         {
             if (ft_isnum(tokens[i]) == false)
                 throw std::runtime_error("Error on parseErrorPages : invalid value");
+            try
+            {
+                error_code = ft_stos(tokens[i]);
+            }
+            catch(const std::exception& e)
+            {
+                std::cerr << e.what() << std::endl;
+                throw std::runtime_error("Error on parseErrorPages : invalid value");
+            }
+            if (error_code < 200 || error_code >= 600)
+                throw std::runtime_error("Error on parseErrorPages : invalid error_code");
             vec.push_back(ft_stos(tokens[i]));
         }
     }
@@ -296,10 +387,10 @@ void parseLocationBlock(std::vector<std::string>& tokens, Server& server_info, s
     bool        autoindex_flag = false;
     bool        end_flag = false;
     size_t      last_idx = i + 1; // last_idx는 directory 가리키는중
+    int         return_status;
 
-    if (getFileType(tokens[++i]) != DIRECTORY)
-        throw std::runtime_error("Error on parseLocationBlock : not a directory");
-    loc.setLocationPath(tokens[i++]);
+    loc.setLocationPath(tokens[++i]);
+    i++;
 
     while (tokens[last_idx] != "}")
         last_idx++;
@@ -328,7 +419,16 @@ void parseLocationBlock(std::vector<std::string>& tokens, Server& server_info, s
                 throw std::runtime_error("Error on parseLocationBlock : duplicated return");
             if (ft_isnum(tokens[++i]) == false)
                 throw std::runtime_error("Error on parseLocationBlock : not valid return status");
-            loc.setLocationReturnStatus(ft_stoi(tokens[i]));
+            try
+            {
+                return_status = ft_stoi(tokens[i]);
+            }
+            catch(const std::exception& e)
+            {
+                std::cerr << e.what() << std::endl;
+                throw std::runtime_error("Error on parseLocationBlock : not valid return status");
+            }
+            loc.setLocationReturnStatus(return_status);
             if (removeSemicolon(tokens[++i]) == false)
                 throw std::runtime_error("Error on parseLocationBlock : no ';' in return");
             loc.setLocationReturn(tokens[i]);
@@ -381,7 +481,7 @@ void parseLocationBlock(std::vector<std::string>& tokens, Server& server_info, s
             loc.setLocationCgiPath(tokens[i]);
         }
         else
-            throw std::runtime_error("Error on parseLocationBlock : invalid token : " + tokens[i]);
+            throw std::runtime_error("Error on parseLocationBlock : invalid token");
     }
     //check location block
     checkLocationBlockError(loc);       
@@ -398,6 +498,7 @@ void parseServerBlock(std::string& content, Server& server_info)
     std::vector<std::string>    tokens;
     bool                        autoindex_flag = false;
     size_t                      i = 1;
+    int                         return_status;
 
     tokens = splitString(content += ' ', std::string(" \n\t")); // tokens[0] = '{'
     for (; i < tokens.size() - 1; i++)
@@ -424,7 +525,6 @@ void parseServerBlock(std::string& content, Server& server_info)
                 throw std::runtime_error("Error on parseServerBlock : duplicated client_max_body_size");
             if (removeSemicolon(tokens[++i]) == false)
                 throw std::runtime_error("Error on parseServerBlock : no ';' in client_max_body_size");
-            // strtoul : 오버플로우시 ULONG_MAX, 변환실패시 0 반환 및 오버플로우
             if (ft_isnum(tokens[i]) == false)
                 throw std::runtime_error("Error on parseServerBlock : invalid client_max_body_size value");
             server_info.setServerClientMaxBodySize(strtoul(tokens[i].c_str(), NULL, 10));
@@ -459,7 +559,16 @@ void parseServerBlock(std::string& content, Server& server_info)
                 throw std::runtime_error("Error on parseServerBlock : duplicated return");
             if (ft_isnum(tokens[++i]) == false)
                 throw std::runtime_error("Error on parseServerBlock : not valid return status");
-            server_info.setServerReturnStatus(ft_stoi(tokens[i]));
+            try
+            {
+                return_status = ft_stoi(tokens[i]);
+            }
+            catch(const std::exception& e)
+            {
+                std::cerr << e.what() << std::endl;
+                throw std::runtime_error("Error on parseServerBlock : not valid return status");
+            }
+            server_info.setServerReturnStatus(return_status);
             if (removeSemicolon(tokens[++i]) == false)
                 throw std::runtime_error("Erro on parseServerBlock : no ';' in return");
             server_info.setServerReturn(tokens[i]);
@@ -493,7 +602,7 @@ void parseServerBlock(std::string& content, Server& server_info)
             parseErrorPages(tokens, server_info, i);
         }
         else
-            throw std::runtime_error("Error on parseServerBlock : invalid token " + tokens[i]);
+            throw std::runtime_error("Error on parseServerBlock : invalid token");
     }
 }
 
