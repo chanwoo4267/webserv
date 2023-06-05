@@ -136,3 +136,20 @@ int ft_stoi(std::string input)
     }
     return result * sign;
 }
+
+/*
+    input string, convert it to correspond method type
+
+    if not GET, POST, DELETE then return INVALID
+*/
+MethodType checkMethodType(std::string method)
+{
+    if (method == "GET")
+        return GET;
+    else if (method == "POST")
+        return POST;
+    else if (method == "DELETE")
+        return DELETE;
+    else
+        return INVALID;
+}

@@ -2,6 +2,7 @@
 #define REQUEST_HPP
 
 # include "Webserv.hpp"
+# include "Utility.hpp"
 
 class Request
 {
@@ -30,6 +31,8 @@ class Request
         void pushHeader(std::string str1, std::string str2);
         void setBody(std::string body);
         void setContentLength(size_t content_length);
+
+        int parseRequest(std::string request);
 };
 
 #endif
