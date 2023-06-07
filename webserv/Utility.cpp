@@ -150,6 +150,31 @@ MethodType checkMethodType(std::string method)
         return POST;
     else if (method == "DELETE")
         return DELETE;
+    else if (method == "HEAD")
+        return HEAD;
+    else if (method == "PUT")
+        return PUT;
+    else if (method == "CONNECT")
+        return CONNECT;
+    else if (method == "OPTIONS")
+        return OPTIONS; 
+    else if (method == "TRACE")
+        return TRACE;
+    else if (method == "PATCH")
+        return PATCH;  
     else
         return INVALID;
+}
+
+/*
+    convert string to hex number
+*/
+size_t ft_stoh(std::string input)
+{
+	std::stringstream ss;
+	size_t ret = 0;
+	ss << std::hex << input;
+	ss >> ret;
+
+	return ret;
 }

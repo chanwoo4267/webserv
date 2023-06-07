@@ -13,6 +13,7 @@ class Request
         std::map<std::string, std::string>  _headers;
         std::string                         _body;
         size_t                              _content_length;
+        std::string                         _protocol_version;
 
     public:
         Request();
@@ -24,6 +25,7 @@ class Request
         const std::map<std::string, std::string>& getHeaders();
         const std::string& getBody();
         const size_t& getContentLength();
+        const std::string& getProtocolVersion();
 
         void setClientFd(int fd);
         void setMethod(std::string method);
@@ -31,6 +33,7 @@ class Request
         void pushHeader(std::string str1, std::string str2);
         void setBody(std::string body);
         void setContentLength(size_t content_length);
+        void setProtocolVersion(std::string protocol_version);
 
         int parseRequest(std::string request);
 };

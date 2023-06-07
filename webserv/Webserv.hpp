@@ -37,6 +37,12 @@ enum MethodType
     GET,
     POST,
     DELETE,
+    HEAD,
+    PUT,
+    CONNECT,
+    OPTIONS,
+    TRACE,
+    PATCH,
     INVALID,
 };
 
