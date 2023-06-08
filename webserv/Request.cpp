@@ -81,7 +81,15 @@ void Request::setProtocolVersion(std::string protocol_version)
     this->_protocol_version = protocol_version;
 }
 
-static std::string parse_request_body_chunked(std::string& request, size_t index)
+size_t Request::parse_headers_line(std::string& request, size_t index)
+{
+    size_t delim = request.find_first_of(":", index);
+    size_t end = request.find_first_of("\r\n", delim);
+    this->_headers[request.substr(index, delim - index)] = request.substr(delim + 2, end - delim - 2);
+    return end;
+}
+
+std::string Request::parse_request_body_chunked(std::string& request, size_t index)
 {
     size_t i, r, size;
     std::string ret, size_buf, line;
@@ -102,6 +110,11 @@ static std::string parse_request_body_chunked(std::string& request, size_t index
         i = i + size + 4;
     }
     return ret;
+}
+
+std::string Request::parse_request_body(std::string& request, size_t index)
+{
+    return request.substr(index + 2, request.size());
 }
 
 /*
@@ -145,10 +158,12 @@ int Request::parseRequest(std::string request)
     i = request.find_first_of("\n", j) + 1; // first header's start letter
     while (i < request.size())
     {
-        if (request[i] == '\r' && request[i + 1] == '\0')
+        if (request[i] == '\r' && request[i + 1] == '\0') // end
 			break;
-		if (request[i] == '\r' && request[i + 1] == '\n')
+		if (request[i] == '\r' && request[i + 1] == '\n') // body
 		{
+            // 만약 헤더 파싱중 transfer-encoding 헤더를 넣었고, 그 값이 chunked라면 chunked-body로 파싱한다.
+            // map의 index 접근시 없는 key값이라면 key값을 새로 생성해주고, 대응되는 값은 null값으로 들어간다.
 			if (strstr(this->_headers["Transfer-Encoding"].c_str(), "chunked") != NULL)
 				this->_body = parse_request_body_chunked(request, i);
 			else
@@ -156,9 +171,37 @@ int Request::parseRequest(std::string request)
 
 			break;
 		}
-		end = parse_headers_line(this->_headers, request, i);
-		if (end + 1 == '\0')
+		end = parse_headers_line(request, i); // parse one header, and return its end
+		if (end + 1 == '\0') // if request message ends
 			break;
-		i = end + 2;
+		i = end + 2; // current end points to /r
     }
+}
+
+/*
+    get path of URI
+
+    if path is "http://test.com?query=1"
+    get "http://test.com"
+*/
+std::string Request::getUriPath()
+{
+    unsigned long i = this->_path.find_first_of("?", 0);
+	if (i == std::string::npos)
+		return this->_path;
+	return this->_path.substr(0, i);
+}
+
+/*
+    get query of URI
+
+    if path is "http://test.com?query=1"
+    get "query=1"
+*/
+std::string Request::getUriQuery()
+{
+    unsigned long i = this->_path.find_first_of("?", 0);
+	if (i == std::string::npos)
+		return "";
+	return this->_path.substr(i + 1, this->_path.size() - i);
 }

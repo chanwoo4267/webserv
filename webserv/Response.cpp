@@ -52,12 +52,29 @@ void Response::setBody(std::string body)
     this->_body = body;
 }
 
+/*
+    set Response status code and phrase
+
+    input : "200 OK"
+    status code = "200"
+    status phrase = "OK"
+*/
 void Response::setStatus(std::string status)
 {
     this->setStatusCode(status.substr(0, 3));
     this->setStatusPhrase(status.substr(4));
 }
 
+/*
+    make Response Header
+
+    HTTP/1.1 200 OK\r\n
+    header: content\r\n
+    ...
+    header: content\r\n
+    \r\n
+    Response Message Body\r\0
+*/
 std::string Response::makeHeader()
 {
     std::string result = "HTTP/1.1 " + this->_status_code + " " + this->_status_phrase + "\r\n";
@@ -69,6 +86,9 @@ std::string Response::makeHeader()
 	return result;
 }
 
+/*
+    make Response Body Message
+*/
 void Response::makeStatusBody()
 {
     std::string result;

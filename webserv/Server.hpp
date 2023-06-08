@@ -65,6 +65,8 @@ class Server
         void pushServerLocation(Location loc);
         void pushServerErrorPage(short error_code, std::string error_path);
 
+        void setupServerSocket();
+
         void printServer();
 };
 

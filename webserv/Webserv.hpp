@@ -17,12 +17,14 @@
 # include <fcntl.h>
 # include <unistd.h>
 # include <dirent.h>
+# include <sys/types.h>
 # include <sys/socket.h>
 # include <sys/select.h>
 # include <sys/stat.h>
 # include <netinet/in.h>
 # include <arpa/inet.h>
 # include <cerrno>
+# include <netdb.h>
 
 /* colors */
 # define RED "\e[0;31m"
@@ -30,6 +32,9 @@
 # define YLW "\e[0;33m"
 # define BLU "\e[0;34m"
 # define CYN "\e[0;36m"
+
+/* constants */
+# define BACKLOG_QUEUE_SIZE 10 // listen backlog queue size
 
 /* enum */
 enum MethodType

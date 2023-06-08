@@ -155,6 +155,9 @@ void Server::pushServerErrorPage(short error_code, std::string error_path)
     this->_server_error_pages[error_code] = error_path;
 }
 
+/*
+    print all Server private values
+*/
 void Server::printServer()
 {
     std::cout << "--------------------------------------" << std::endl;
@@ -176,4 +179,43 @@ void Server::printServer()
         it->printLocation();
     }
     std::cout << "--------------------------------------" << std::endl;
+}
+
+/*
+    initialize and set server socket(_server_listen_socket)
+
+    socket(), fcntl(O_NONBLOCK), setsockopt(SO_REUSEADDR), bind(), listen()
+*/
+void Server::setupServerSocket()
+{
+    struct addrinfo hints, *info;
+
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags = AI_PASSIVE;
+
+    // getaddrinfo : dns resolving (domain 주소를 ip 주소로 변환, addrinfo의 linked list로 반환)
+    if (getaddrinfo(this->_server_host.c_str(), this->_server_port.c_str(), &hints, &info) >= 0)
+    {
+        if ((this->_server_listen_socket = socket(info->ai_family, info->ai_socktype, info->ai_protocol)) < 0)
+            throw std::runtime_error("Error on setupServerSocket : socket() error");
+
+        fcntl(this->_server_listen_socket, F_SETFL, O_NONBLOCK);
+        if (this->_server_listen_socket < 0)
+            throw std::runtime_error("Error on setupServerSocket : fcntl() error");
+        
+        int option = 1;
+        if (setsockopt(this->_server_listen_socket, SOL_SOCKET, SO_REUSEADDR, (const char *)&option, sizeof(option)) < 0)
+			throw std::runtime_error("Error on setupServerSocket : setsockopt() error");
+        
+        if (bind(this->_server_listen_socket, info->ai_addr, info->ai_addrlen))
+            throw std::runtime_error("Error on setupServerSocket : bind() error");
+        freeaddrinfo(info);
+    
+        if (listen(this->_server_listen_socket, BACKLOG_QUEUE_SIZE) < 0)
+            throw std::runtime_error("Error on setupServerSocket : listen() error");
+    }
+    else
+        throw std::runtime_error("Error on setupServerSocket : getaddrinfo() error");
 }

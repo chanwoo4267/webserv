@@ -36,6 +36,12 @@ class Request
         void setProtocolVersion(std::string protocol_version);
 
         int parseRequest(std::string request);
+        size_t parse_headers_line(std::string& request, size_t index);
+        std::string parse_request_body_chunked(std::string& request, size_t index);
+        std::string parse_request_body(std::string& request, size_t index);
+
+        std::string getUriPath();
+        std::string getUriQuery();
 };
 
 #endif
