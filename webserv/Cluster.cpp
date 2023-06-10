@@ -1,6 +1,10 @@
 #include "Cluster.hpp"
 
-Cluster::Cluster() {}
+Cluster::Cluster()
+{
+    this->_max_fd = -1;
+}
+
 Cluster::~Cluster() {}
 Cluster::Cluster(const Cluster& obj)
 {
@@ -34,10 +38,9 @@ void Cluster::setClusterServers(std::vector<Server> servers)
     this->_cluster_servers = servers;
 }
 
-/* -------------------------------------------------- */
-/* ------------------other methods------------------- */
-/* -------------------------------------------------- */
-
+/*
+    print all server, location info
+*/
 void Cluster::printCluster()
 {
     std::vector<Server>::iterator it;
@@ -45,5 +48,36 @@ void Cluster::printCluster()
     for (it = _cluster_servers.begin(); it != _cluster_servers.end(); it++)
     {
         it->printServer();
+    }
+}
+
+/*
+    check server-dimension duplication
+
+    such as, duplicated host + port
+*/
+bool Cluster::checkCluster()
+{
+    for (std::vector<Server>::iterator it = this->_cluster_servers.begin(); it != this->_cluster_servers.end(); it++)
+    {
+        for (std::vector<Server>::iterator itt = it + 1; itt != this->_cluster_servers.end(); itt++)
+        {
+            if (it->getServerHost() == itt->getServerHost() && it->getServerPort() == itt->getServerHost())
+                throw std::runtime_error("Error on checkCluster : duplicated server host&port");
+            if (it->getServerName() == itt->getServerName())
+                throw std::runtime_error("Error on checkCluster : duplicated server name");
+        }
+    }
+}
+
+void Cluster::executeServer()
+{
+    checkCluster();
+    for (std::vector<Server>::iterator it = this->_cluster_servers.begin(); it != this->_cluster_servers.end(); it++)
+        it->setupServerSocket();
+    
+    while (1)
+    {
+        1;
     }
 }

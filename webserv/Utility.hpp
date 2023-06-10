@@ -11,6 +11,7 @@ int ft_stoi(std::string str);
 bool ft_isnum(std::string str);
 size_t ft_stoh(std::string input);
 MethodType checkMethodType(std::string method);
+std::string statusCodetoString(short status_code);
 
 /* function that changes param */
 bool removeSemicolon(std::string &parametr);

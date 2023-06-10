@@ -21,6 +21,7 @@
 # include <sys/socket.h>
 # include <sys/select.h>
 # include <sys/stat.h>
+# include <sys/event.h>
 # include <netinet/in.h>
 # include <arpa/inet.h>
 # include <cerrno>

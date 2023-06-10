@@ -42,7 +42,7 @@ int main()
     struct sockaddr_in server_addr;
 
     /* socket 할당받음 */
-    if ((server_socket = socket(PF_INET, SOCK_STREAM, 0)) == -1) // AF_INET, PF_INET 둘은 동일
+    if ((server_socket = socket(PF_INET, SOCK_STREAM, 0)) == -1) // AF_INET, PF_INET 둘은 동일. SOCK_STREAM은 TCP통신 의미
         exit_with_perror("socket() error\n" + string(strerror(errno)));
 
     memset(&server_addr, 0, sizeof(server_addr));

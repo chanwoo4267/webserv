@@ -229,16 +229,17 @@ static void checkLocationBlockError(Location& loc_info)
     unsigned long   t_ul;
     std::string     t_str;
 
+    /* !check! 각 값의 default 값 알아보기 */
     t_str = loc_info.getLocationRoot();
-    if (getFileType(t_str) != DIRECTORY || checkFilePermission(t_str, R_OK) == false)
+    if (t_str != "" && (getFileType(t_str) != DIRECTORY || checkFilePermission(t_str, R_OK) == false))
         throw std::runtime_error("Error on checkLocationBlockError : invalid root");
     
     t_str = loc_info.getLocationPath();
-    if (getFileType(t_str) != DIRECTORY || checkFilePermission(t_str, R_OK) == false)
+    if (t_str != "" && (getFileType(t_str) != DIRECTORY || checkFilePermission(t_str, R_OK) == false))
         throw std::runtime_error("Error on checkLocationBlockError : invalid path");
     
     t_str = loc_info.getLocationIndex();
-    if (getFileType(t_str) != REGULARFILE || checkFilePermission(t_str, R_OK) == false)
+    if (t_str != "" && (getFileType(t_str) != REGULARFILE || checkFilePermission(t_str, R_OK) == false))
         throw std::runtime_error("Error on checkLocationBlockError : invalid index");
     
     t_int = loc_info.getLocationReturnStatus();
@@ -256,10 +257,10 @@ static void checkLocationBlockError(Location& loc_info)
             throw std::runtime_error("Error on checkServerBlockError : invalid allow_method");
     
     t_str = loc_info.getLocationCgiPath();
-    if (getFileType(t_str) != REGULARFILE || checkFilePermission(t_str, R_OK) == false)
+    if (t_str != "" && (getFileType(t_str) != REGULARFILE || checkFilePermission(t_str, R_OK) == false))
         throw std::runtime_error("Error on checkLocationBlockError : invalid cgi_path");
     t_str = loc_info.getLocationCgiExtension();
-    if (t_str.empty() == true || t_str[0] != '.')
+    if (t_str.empty() == false && t_str[0] != '.')
         throw std::runtime_error("Error on checkLocationBlockError : invalid cgi_extension");
 }
 

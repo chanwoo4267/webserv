@@ -176,6 +176,9 @@ int Request::parseRequest(std::string request)
 			break;
 		i = end + 2; // current end points to /r
     }
+    if (_headers["Host"] == "")
+        return 400;
+    return 0;
 }
 
 /*

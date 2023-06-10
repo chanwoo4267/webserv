@@ -7,7 +7,9 @@ SRCS		= main.cpp \
 			  Location.cpp \
 			  Server.cpp \
 			  Utility.cpp \
-			  ConfigParser.cpp
+			  ConfigParser.cpp \
+			  Request.cpp \
+			  Response.cpp
 
 OBJS 	=	 $(SRCS:.cpp=.o)
 

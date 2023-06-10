@@ -8,6 +8,8 @@ class Cluster
 {
     private:
         std::vector<Server> _cluster_servers;
+
+        int                 _max_fd;
     
     public:
         Cluster();
@@ -22,6 +24,13 @@ class Cluster
         void setClusterServers(std::vector<Server> servers);
 
         void printCluster();
+        bool checkCluster();
+        void executeServer();
+
+        /* server execute */
+        void waitForClient();
+        void acceptSocket();
+        void treatRequest();
 };
 
 #endif

@@ -9,6 +9,7 @@ int main(int argc, char *argv[])
 
         parseConfigFile(config_file, cluster);
         cluster.printCluster();
+        cluster.executeServer();
     }
     catch(const std::exception& e)
     {

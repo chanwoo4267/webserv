@@ -104,3 +104,7 @@
 * REGULAR FILE이지만 accessible한지 O
 * 들어오는 값에 세미콜론이 없다면, 숫자로 이루어졌는지 확인 O
 * 들어오는 값 중 스테이터스 코드가 valid한 범위인지 (200~600) O
+
+# check servers
+
+* 여러 서버가 동일한 host, 동일한 port를 가졌는지 체크 X

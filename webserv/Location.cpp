@@ -2,7 +2,7 @@
 
 Location::Location()
 {
-    this->_location_client_max_body_size = 0;
+    this->_location_client_max_body_size = 100000;
     this->_location_path = "";
     this->_location_root = "";
     this->_location_index = "";
@@ -10,7 +10,7 @@ Location::Location()
     this->_location_autoindex = false;
     this->_location_cgi_extension = "";
     this->_location_cgi_path = "";
-    this->_location_return_status = 0;
+    this->_location_return_status = 301; // !check! right?
 }
 
 Location::~Location() {}
